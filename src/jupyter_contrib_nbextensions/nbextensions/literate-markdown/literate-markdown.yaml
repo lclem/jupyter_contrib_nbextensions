@@ -1,0 +1,8 @@
+Type: IPython Notebook Extension
+Name: Literate Markdown
+Description: Allows embedding executable code chunks in markdown cells
+Link: readme.md
+# Icon: python-markdown.png
+Main: main.js
+Preprocessor: pymdpreprocessor.py
+Compatibility: 4.x, 5.x
