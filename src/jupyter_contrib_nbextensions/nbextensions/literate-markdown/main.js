@@ -39,22 +39,7 @@ define([
     var MarkdownCell = textcell.MarkdownCell;
     var TextCell = textcell.TextCell;
 
-    var LiterateCell = function (kernel, options) {
-
-        this.config = options.config;
-        this.class_config = new configmod.ConfigWithDefaults(this.config, LiterateCell.options_default, 'LiterateCell');
-
-        CodeCell.call(this, kernel, options);
-        MarkdownCell.call(this, options);
-
-        // Attributes we want to override in this subclass.
-        this.cell_type = 'literate';
-        this.rendered = false;
-        var that = this;
-
-    };
-
-    LiterateCell.options_default = {
+    MarkdownCell.options_default = {
         cm_config : {
             extraKeys: {
                 "Backspace" : "delSpaceToPrevTabStop",
@@ -79,35 +64,42 @@ define([
 
     CodeCell.msg_cells = {};
 
-    LiterateCell.prototype = Object.create(CodeCell.prototype);
+    var old_prototype = MarkdownCell.prototype;
+    MarkdownCell.prototype = Object.create(CodeCell.prototype);
+    
+    MarkdownCell.prototype.output_area = null;
 
-    LiterateCell.prototype.output_area = null;
+    MarkdownCell.prototype.set_rendered = TextCell.prototype.set_rendered;
+    MarkdownCell.prototype.unrender = old_prototype.unrender;
+    MarkdownCell.prototype.add_attachment = old_prototype.add_attachment
+    MarkdownCell.prototype.select = old_prototype.select;
+    MarkdownCell.prototype.set_text = old_prototype.set_text;
+    MarkdownCell.prototype.get_rendered = old_prototype.get_rendered;
+    MarkdownCell.prototype.set_heading_level = old_prototype.set_heading_level;
+    MarkdownCell.prototype.insert_inline_image_from_blob = old_prototype.insert_inline_image_from_blob;
+    MarkdownCell.prototype.bind_events = old_prototype.bind_events;
 
-    LiterateCell.prototype.set_rendered = TextCell.prototype.set_rendered;
-    LiterateCell.prototype.unrender = MarkdownCell.prototype.unrender;
-    LiterateCell.prototype.add_attachment = MarkdownCell.prototype.add_attachment
-    LiterateCell.prototype.select = MarkdownCell.prototype.select;
-    LiterateCell.prototype.set_text = MarkdownCell.prototype.set_text;
-    LiterateCell.prototype.get_rendered = MarkdownCell.prototype.get_rendered;
-    LiterateCell.prototype.set_heading_level = MarkdownCell.prototype.set_heading_level;
-    LiterateCell.prototype.insert_inline_image_from_blob = MarkdownCell.prototype.insert_inline_image_from_blob;
-    LiterateCell.prototype.bind_events = MarkdownCell.prototype.bind_events;
-    //LiterateCell.prototype.fromJSON = MarkdownCell.prototype.fromJSON;
-    //LiterateCell.prototype.toJSON = MarkdownCell.prototype.toJSON;
+    var original_create_element = MarkdownCell.prototype.create_element;
+    MarkdownCell.prototype.create_element = function () {
 
-    LiterateCell.prototype.create_element = function () {
-
-        CodeCell.prototype.create_element_core.call(this, 'literate_cell', LiterateCell.options_default.cm_config);
-
-        // activate spell checking on the markdown area
-        $(this.code_mirror.getInputField()).attr("spellcheck", "true"); 
-
-        var render_area = $('<div/>').addClass('text_cell_render rendered_html').attr('tabindex','-1');
-        this.inner_cell.append(render_area); 
-
+        original_create_element.call(this);
+        var cell = this.element;
+        
+        var output = $('<div></div>');
+        cell.append(output);
+        
+        this.output_area = new outputarea.OutputArea({
+            config: this.config,
+            selector: output,
+            prompt_area: true,
+            events: this.events,
+            keyboard_manager: this.keyboard_manager,
+        });
+        this.completer = new completer.Completer(this, this.events);
+        
     };
 
-    LiterateCell.prototype.execute = function (stop_on_error) {
+    MarkdownCell.prototype.execute = function (stop_on_error) {
 
         var text = this.get_text();
         //console.log("Current text: " + text);
@@ -133,14 +125,15 @@ define([
 
         //console.log("Extracted executable code chunks: \n" + code);
 
-        CodeCell.prototype.execute_core.call(this, stop_on_error, code);
-        LiterateCell.prototype.render.call(this);
+        set_text.call(this, code);
+        CodeCell.prototype.execute.call(this, stop_on_error);
+        set_text.call(this, text);
+        render.call(this);
 
     };
 
-    LiterateCell.prototype.render = function () {
-
-        console.log("LiterateCell.prototype.render")
+    var original_render = MarkdownCell.prototype.render;
+    MarkdownCell.prototype.render = function () {
 
         var text = this.get_text();
         var blocks = text.split('````');
@@ -149,7 +142,7 @@ define([
         if (blocks.length > 0 && this.kernel) {
 
             var kernel = this.kernel.name;
-            console.log("Current kernel: " + kernel);
+            //console.log("Current kernel: " + kernel);
     
             for (var i = 0; i < blocks.length; i++) {
                 code += blocks[i];
@@ -164,17 +157,18 @@ define([
         else
             code = text
 
-        //console.log("Extracted executable code chunks: \n" + code);
-
         var cont = CodeCell.prototype.render.apply(this, arguments);
-        cont = MarkdownCell.prototype.render_core.call(this, code);
+        set_text.apply(this, code);
+        cont = original_render.call(this);
+        set_text.apply(this, text);
         return cont;
         
     };
 
-    LiterateCell.prototype.fromJSON = function (data) {
+    var original_fromJSON = MarkdownCell.prototype.fromJSON;
+    MarkdownCell.prototype.fromJSON = function (data) {
         Cell.prototype.fromJSON.apply(this, arguments);
-        if (data.cell_type === 'literate') { // NEW
+        if (data.cell_type === 'markdown') {
 
             if (data.attachments !== undefined) {
                 this.attachments = data.attachments;
@@ -199,8 +193,9 @@ define([
         }
     };
 
-    LiterateCell.prototype.toJSON = function () {
-        var data = MarkdownCell.prototype.toJSON.apply(this);
+    var original_toJSON = MarkdownCell.prototype.toJSON;
+    MarkdownCell.prototype.toJSON = function () {
+        var data = original_toJSON.apply(this);
 
         // is finite protect against undefined and '*' value
         if (isFinite(this.input_prompt_number)) {
@@ -224,7 +219,31 @@ define([
         return data;
     };
 
-    return {'LiterateCell' : LiterateCell};
+   var load_ipython_extension = function() {
+        // load_css('./main.css');
+        // events.on("rendered.MarkdownCell", function (event, data) {
+        //    render_cell(data.cell);
+        // });
+        // events.on("trust_changed.Notebook", set_trusted_indicator);
+
+        // $('#save_widget').append('<i id="notebook-trusted-indicator" class="fa fa-question notebook-trusted" />');
+        // set_trusted_indicator();
+
+        /* Show values stored in metadata on reload */
+        events.on("kernel_ready.Kernel", function () {
+            if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
+                // update_md_cells()
+            } else {
+                events.on("notebook_loaded.Notebook", function () {
+                    // update_md_cells()
+                })
+            }
+        });
+    };
+
+    return {
+        load_ipython_extension : load_ipython_extension
+    };
 
 });
 
