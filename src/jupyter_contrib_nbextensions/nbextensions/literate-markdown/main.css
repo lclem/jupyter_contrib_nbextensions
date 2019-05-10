@@ -1,0 +1,19 @@
+.literate_cell.rendered .input_area {
+    display: none;
+}
+
+.literate_cell.unrendered .text_cell_render {
+    display: none;
+}
+
+/*
+div.text_cell_render {
+    outline: none;
+    resize: none;
+    width:  inherit;
+    border-style: none;
+    padding: 0.5em 0.5em 0.5em @code_padding;
+    color: @text-color;
+    .border-box-sizing();
+}
+*/

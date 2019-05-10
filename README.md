@@ -1,3 +1,12 @@
+This fork: Literate Markdown extension
+======================================
+
+Instructions:
+
+```
+pip install -e jupyter_contrib_nbextensions && jupyter contrib nbextension install --user && jupyter notebook --no-browser
+```
+
 Jupyter notebook extensions
 ===========================
 
