@@ -235,7 +235,7 @@ define([
             // this helps the kernel giving error messages with the correct line numbers
             if (i % 2 == 0) { 
                 var lines = blocks[i].split('\n');
-                for (var j = 0; j < lines.length; j++) {
+                for (var j = 0; j < lines.length - 1; j++) {
                     code += "\n";
                 }
             }
@@ -245,10 +245,13 @@ define([
 
         //console.log("Extracted executable code chunks: \n" + code);
 
+        this.rendered = false;
         MarkdownCell.prototype.set_text.call(this, code);
         CodeCell.prototype.execute.call(this, stop_on_error);
+        this.rendered = false;
         MarkdownCell.prototype.set_text.call(this, text);
         MarkdownCell.prototype.render.call(this);
+        this.auto_highlight();
 
     };
 
@@ -415,13 +418,13 @@ define([
 
     };
 
-    var upgrade_cell = function(cell) {
+    var upgrade_cell = function(cell, index) {
 
-        if (cell.cell_type === 'markdown') {
+        //if (cell.cell_type === 'markdown') {
 
             console.log("[literate-markdown] upgrading cell");
 
-            var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type);
+            var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
             new_cell.unrender();
             new_cell.set_text(cell.get_text());
             new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
@@ -429,7 +432,7 @@ define([
             Jupyter.notebook.delete_cell(cell_index);
             render_cell(new_cell);
 
-        }
+        //}
 
     }
 
@@ -474,8 +477,10 @@ define([
 //                text.classList.remove('hidden');
 //                text.classList.add('show');
 
-            upgrade_cell(cell);
+            upgrade_cell(cell, i);
         }
+
+
     };
 
     var literate_init = function() {
