@@ -320,7 +320,7 @@ define([
             this.output_area.trusted = data.metadata.trusted || false;
 
             if (data.outputs !== undefined) {
-                // this.output_area.fromJSON(data.outputs, data.metadata);
+                this.output_area.fromJSON(data.outputs, data.metadata);
             }
         }
     };
@@ -335,7 +335,8 @@ define([
         } else {
             data.execution_count = null;
         }
-        
+        */
+
         var outputs = this.output_area.toJSON();
         data.outputs = outputs;
         data.metadata.trusted = this.output_area.trusted;
@@ -349,7 +350,6 @@ define([
         } else {
             data.metadata.scrolled = this.output_area.scroll_state;
         }
-        */
 
         return data;
     };
@@ -420,7 +420,7 @@ define([
 
     var upgrade_cell = function(cell, index) {
 
-        //if (cell.cell_type === 'markdown') {
+        if (cell.cell_type === 'markdown') {
 
             console.log("[literate-markdown] upgrading cell");
 
@@ -432,7 +432,7 @@ define([
             Jupyter.notebook.delete_cell(cell_index);
             render_cell(new_cell);
 
-        //}
+        }
 
     }
 
