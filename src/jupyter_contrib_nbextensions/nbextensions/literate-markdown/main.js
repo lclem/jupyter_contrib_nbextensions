@@ -319,9 +319,10 @@ define([
 
             this.output_area.trusted = data.metadata.trusted || false;
 
-            if (data.outputs !== undefined) {
-                this.output_area.fromJSON(data.outputs, data.metadata);
-            }
+            // do not restore outputs for markdown cells
+            //if (data.outputs !== undefined) {
+            //    this.output_area.fromJSON(data.outputs, data.metadata);
+            //}
         }
     };
 
@@ -337,6 +338,8 @@ define([
         }
         */
 
+        // do not restore output for markdown cells
+        /*
         var outputs = this.output_area.toJSON();
         data.outputs = outputs;
         data.metadata.trusted = this.output_area.trusted;
@@ -350,7 +353,7 @@ define([
         } else {
             data.metadata.scrolled = this.output_area.scroll_state;
         }
-
+        */
         return data;
     };
 
