@@ -46,179 +46,23 @@ define([
     var TextCell = textcell.TextCell;
     var Notebook = notebook.Notebook;
 
-    var original_MarkdownCell = textcell.MarkdownCell;
-    var original_prototype = original_MarkdownCell.prototype;
-    var original_render = original_prototype.render;
-    var original_create_element = original_prototype.create_element;
-    var original_fromJSON = original_prototype.fromJSON;
-    var original_toJSON = original_prototype.toJSON;
-
-    var options_default = {
-        cm_config : {
-            extraKeys: {
-                "Backspace" : "delSpaceToPrevTabStop",
-            },
-            // mode: 'ipythongfm',
-            // mode: 'htmlmixed',
-            mode: 'markdown',
-            //theme: 'ipython',
-            matchBrackets: true,
-            autoCloseBrackets: true,
-            lineWrapping : true,
-            lineNumbers : true
-        },
-        highlight_modes : {
-            'magic_javascript'    :{'reg':['^%%javascript']},
-            'magic_perl'          :{'reg':['^%%perl']},
-            'magic_ruby'          :{'reg':['^%%ruby']},
-            'magic_python'        :{'reg':['^%%python3?']},
-            'magic_shell'         :{'reg':['^%%bash']},
-            'magic_r'             :{'reg':['^%%R']},
-            'magic_text/x-cython' :{'reg':['^%%cython']}
-        }
+    var escape = function(s) {
+        return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     };
 
-    var myMarkdownCell = function (kernel, options) {
-
-        console.log("[literate-markdown] creating new MarkdownCell");
-
-        CodeCell.apply(this, [kernel, options]);
-        //original_MarkdownCell.call(this, options);
-
-        // from MarkdownCell
-        options = options || {};
-        //var config_default = utils.mergeopt(TextCell, options_default);
-        this.class_config = new configmod.ConfigWithDefaults(options.config, options_default, 'MarkdownCell');
-        //TextCell.apply(this, [$.extend({}, options, {config: options.config})]);
-
-        this.cell_type = 'markdown';
-        this.drag_counter = 0;
-
-        // from TextCell
-        mathjaxutils = mathjaxutils;
-        this.rendered = false;
-
+    var agda_input_prompt = function (prompt_value, lines_number) {
+        var ns;
+        if (prompt_value === undefined || prompt_value === null) {
+            ns = "&nbsp;";
+        } else {
+            ns = encodeURIComponent(prompt_value);
+        }
+        return '[' + ns + ']';
     };
 
-    textcell.MarkdownCell = myMarkdownCell;
-    var MarkdownCell = textcell.MarkdownCell;
+    CodeCell.input_prompt_function = agda_input_prompt;
 
-    MarkdownCell.prototype = Object.create(CodeCell.prototype);
-
-    MarkdownCell.prototype.output_area = null;
-
-    MarkdownCell.prototype.unrender = original_prototype.unrender;
-    MarkdownCell.prototype.add_attachment = original_prototype.add_attachment
-    MarkdownCell.prototype.select = original_prototype.select;
-    MarkdownCell.prototype.get_text = original_prototype.get_text;
-    MarkdownCell.prototype.set_text = original_prototype.set_text;
-    MarkdownCell.prototype.get_rendered = original_prototype.get_rendered;
-    MarkdownCell.prototype.set_rendered = original_prototype.set_rendered;
-    MarkdownCell.prototype.set_heading_level = original_prototype.set_heading_level;
-    MarkdownCell.prototype.insert_inline_image_from_blob = original_prototype.insert_inline_image_from_blob;
-    MarkdownCell.prototype.bind_events = original_prototype.bind_events;
-
-    MarkdownCell.prototype.create_element = function () {
-    
-        /*
-        CodeCell.prototype.create_element.apply(this, arguments);
-        var cell = this.element;
-        */
-
-        Cell.prototype.create_element.apply(this, arguments);
-        var that = this;
-
-        var cell =  $('<div></div>').addClass('cell code_cell literate_cell');
-        cell.attr('tabindex','2');
-
-        var input = $('<div></div>').addClass('input');
-        this.input = input;
-
-        var prompt_container = $('<div/>').addClass('prompt_container');
-
-        var run_this_cell = $('<div></div>').addClass('run_this_cell');
-        run_this_cell.prop('title', 'Run this cell');
-        run_this_cell.append('<i class="fa-step-forward fa"></i>');
-        run_this_cell.click(function (event) {
-            event.stopImmediatePropagation();
-            that.execute();
-        });
-
-        var prompt = $('<div/>').addClass('prompt input_prompt literate_prompt');
-
-        var inner_cell = $('<div/>').addClass('inner_cell');
-        this.celltoolbar = new celltoolbar.CellToolbar({
-            cell: this, 
-            notebook: this.notebook});
-        inner_cell.append(this.celltoolbar.element);
-        var input_area = $('<div/>').addClass('input_area');
-        this.code_mirror = new CodeMirror(input_area.get(0), options_default.cm_config);
-        // In case of bugs that put the keyboard manager into an inconsistent state,
-        // ensure KM is enabled when CodeMirror is focused:
-        this.code_mirror.on('focus', function () {
-            if (that.keyboard_manager) {
-                that.keyboard_manager.enable();
-            }
-
-            that.code_mirror.setOption('readOnly', !that.is_editable());
-        });
-        this.code_mirror.on('keydown', $.proxy(this.handle_keyevent,this));
-        $(this.code_mirror.getInputField()).attr("spellcheck", "true");
-        inner_cell.append(input_area);
-
-        // NEW
-        var render_area = $('<div/>').addClass('text_cell_render rendered_html').attr('tabindex','-1');
-        inner_cell.append(render_area);
-
-        prompt_container.append(prompt).append(run_this_cell);
-        input.append(prompt_container).append(inner_cell);
-
-        var output = $('<div></div>');
-        cell.append(input).append(output);
-        this.element = cell;
-        this.output_area = new outputarea.OutputArea({
-            config: this.config,
-            selector: output,
-            prompt_area: true,
-            events: this.events,
-            keyboard_manager: this.keyboard_manager,
-        });
-        this.completer = new completer.Completer(this, this.events);
-
-        //var inner_cell = cell.find('div.inner_cell');
-
-        this.inner_cell = inner_cell;
-
-       //original_prototype.create_element.apply(this, arguments);
-
-       /* How to set this up in code?
-        .code_cell.rendered .input_area {
-            display: none;
-        }
-
-        .code_cell.unrendered .text_cell_render {
-            display: none;
-        }
-        */
-
-    };
-
-    MarkdownCell.prototype.set_input_prompt = function (number) {
-        
-        /*var nline = 1;
-        if (this.code_mirror !== undefined) {
-           nline = this.code_mirror.lineCount();
-        }
-        this.input_prompt_number = number;
-        var prompt_html = CodeCell.input_prompt_function(this.input_prompt_number, nline);
-
-        // This HTML call is okay because the user contents are escaped.
-        this.element.find('div.input_prompt').html(prompt_html);
-        this.events.trigger('set_dirty.Notebook', {value: true});
-        */
-       
-    };
-
+    /*
     MarkdownCell.prototype.execute = function (stop_on_error) {
 
         var text = this.get_text();
@@ -289,7 +133,9 @@ define([
         return cont;
         
     };
+    */
 
+    /*
     MarkdownCell.prototype.fromJSON = function (data) {
 
         console.log("[literate-markdown] called fromJSON");
@@ -328,113 +174,35 @@ define([
     MarkdownCell.prototype.toJSON = function () {
         var data = original_toJSON.apply(this);
 
-        /* ignore for now
-        // is finite protect against undefined and '*' value
-        if (isFinite(this.input_prompt_number)) {
-            data.execution_count = this.input_prompt_number;
-        } else {
-            data.execution_count = null;
-        }
-        
-        var outputs = this.output_area.toJSON();
-        data.outputs = outputs;
-        data.metadata.trusted = this.output_area.trusted;
-        if (this.output_area.collapsed) {
-            data.metadata.collapsed = this.output_area.collapsed;
-        } else {
-            delete data.metadata.collapsed;
-        }
-        if (this.output_area.scroll_state === 'auto') {
-            delete data.metadata.scrolled;
-        } else {
-            data.metadata.scrolled = this.output_area.scroll_state;
-        }
-        */
-
         return data;
     };
 
-    Notebook.prototype.insert_cell_at_index = function(type, index){
-
-        console.log("[literate-markdown] inserting a new cell of type: ", type);
-
-        var ncells = this.ncells();
-        index = Math.min(index, ncells);
-        index = Math.max(index, 0);
-        var cell = null;
-        type = type || this.class_config.get_sync('default_cell_type');
-        if (type === 'above') {
-            if (index > 0) {
-                type = this.get_cell(index-1).cell_type;
-            } else {
-                type = 'code';
-            }
-        } else if (type === 'below') {
-            if (index < ncells) {
-                type = this.get_cell(index).cell_type;
-            } else {
-                type = 'code';
-            }
-        } else if (type === 'selected') {
-            type = this.get_selected_cell().cell_type;
-        }
-
-        if (ncells === 0 || this.is_valid_cell_index(index) || index === ncells) {
-            var cell_options = {
-                events: this.events, 
-                config: this.config, 
-                keyboard_manager: this.keyboard_manager, 
-                notebook: this,
-                tooltip: this.tooltip
-            };
-            switch(type) {
-            case 'code':
-                cell = new codecell.CodeCell(this.kernel, cell_options);
-                cell.set_input_prompt();
-                break;
-            case 'markdown':
-                cell = new myMarkdownCell(this.kernel, cell_options); // only change: added this.kernel as first argument
-                break;
-            case 'raw':
-                cell = new textcell.RawCell(cell_options);
-                break;
-            default:
-                console.log("Unrecognized cell type: ", type, cellmod);
-                cell = new cellmod.UnrecognizedCell(cell_options);
-            }
-
-            if(this._insert_element_at_index(cell.element,index)) {
-                cell.render();
-                this.events.trigger('create.Cell', {'cell': cell, 'index': index});
-                cell.refresh();
-                // We used to select the cell after we refresh it, but there
-                // are now cases were this method is called where select is
-                // not appropriate. The selection logic should be handled by the
-                // caller of the the top level insert_cell methods.
-                this.set_dirty(true);
-            }
-        }
-        return cell;
-
-    };
+    */
 
     var upgrade_cell = function(cell, index) {
 
-        //if (cell.cell_type === 'markdown') {
+        console.log("[agda-extension] reloading cell");
 
-            console.log("[literate-markdown] upgrading cell");
-
-            var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
-            new_cell.unrender();
-            new_cell.set_text(cell.get_text());
-            new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
-            var cell_index = Jupyter.notebook.find_cell_index(cell);
-            Jupyter.notebook.delete_cell(cell_index);
-            render_cell(new_cell);
-
-        //}
+        var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
+        new_cell.unrender();
+        new_cell.set_text(cell.get_text());
+        new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
+        var cell_index = Jupyter.notebook.find_cell_index(cell);
+        Jupyter.notebook.delete_cell(cell_index);
+        render_cell(new_cell);
 
     }
+
+    var upgrade_cells = function () {
+        var ncells = Jupyter.notebook.ncells();
+        var cells = Jupyter.notebook.get_cells();
+
+        for (var i = 0; i < ncells; i++) {
+            var cell = cells[i];
+            upgrade_cell(cell, i);
+        }
+
+    };
 
     var render_cell = function(cell) {
         //var element = cell.element.find('div.text_cell_render');
@@ -449,50 +217,126 @@ define([
         cell.render();
     };
 
-    /**
-     * Update all references variables in markdown cells
-     *
-     */
-    var update_md_cells = function () {
-        var ncells = Jupyter.notebook.ncells();
-        var cells = Jupyter.notebook.get_cells();
+    var process_new_output = function (cell, output) {
 
-        var x = document.getElementsByClassName('text_cell');
+        if (output == "OK") {
+            // add a green OK badge somewhere
+        }
+        else {
 
-        var i;
-        for (i = 0; i < x.length; i++) {
+            /*            
+                *Error*: filename: range
+                range: 57,18-18
+                range: 56,5-57,17
+            */
 
-            //x[i].classList.add('code_cell');
-            //x[i].classList.add('literate_cell');
-            //x[i].classList.remove('text_cell');
+            console.log("[agda-extension] process_new_output, output: " + output);
+            var lines = output.split('\n');
+            
+            var full_filename = null, filename = null, from = null, to = null;
+
+            var re_filename = /^\*Error\*\: (.*)\:.*$/g;
+            var parse_filename = re_filename.exec(lines[0]);
+
+            if(parse_filename !== null && parse_filename.length == 2) {
+
+                full_filename = parse_filename[1];
+
+                var re_last = /^.*\/(.*)$/g;
+                parse_filename = re_last.exec(full_filename);
+
+                if(parse_filename !== null && parse_filename.length == 2) {
+
+                    filename = parse_filename[1];
+
+                }
+
+            }
+
+            // line,col1-col2
+            var re1 = /^\*Error\*.*\:.*\:(\d+),(\d+)-(\d+)$/g;
+
+            // line1,col1-line2,col2
+            var re2 = /^\*Error\*.*\:.*\:(\d+),(\d+)-(\d+),(\d+)$/g;
+
+            var parse1 = re1.exec(lines[0]);
+            var parse2 = re2.exec(lines[0]);
+
+            if (parse2 !== null) {
+
+                console.log("[agda-extension] process_new_output, len2: " + parse2.length);
+
+                if(parse2.length == 5) {
+
+                    from = parse2[1];
+                    to = parse2[3];
+
+                }
+
+            }
+            else if (parse1 !== null) {
+
+                console.log("[agda-extension] process_new_output, len1: " + parse1.length);
+                
+                if (parse1.length == 4) {
+
+                    from = parse1[1];
+                    to = from;
+                }
+
+            }
+
+            console.log("[agda-extension] process_new_output, from: " + from + ", to: " + to);
+
+            if(from !== null && to !== null) {
+
+                highlight_error_in_cell(cell, from, to);
+
+            }
+
+            if(full_filename !== null && filename !== null) {
+
+                // shorten the filename for readability
+                console.log("[agda-extension] replacing full filename \"" + full_filename + "\", with: \"" + filename + "\"");
+
+                var re = new RegExp(escape(full_filename), "gi");
+                output = output.replace(re, filename);
+
+            }
 
         }
 
-        for (var i = 0; i < ncells; i++) {
-            var cell = cells[i];
-            var element = cell.element;
+        return output;
 
+    }
 
-            //var text = cell.element.getElementById('text');
-//                text.classList.remove('hidden');
-//                text.classList.add('show');
-
-            upgrade_cell(cell, i);
-        }
-
-
-    };
-
-    var literate_init = function() {
+    var agda_init = function() {
         // read configuration, then call toc
         Jupyter.notebook.config.loaded.then(function () {
 
-            update_md_cells();
+            upgrade_cells();
  
             //events.on("rendered.MarkdownCell", function(evt, data) {
             //    var cell = $(data.cell);;
             //    render_cell(cell);
             //});
+
+            events.on("finished_execute.CodeCell", function(evt, data) {
+
+                // retrieve the contents of the output area
+                var cell = data.cell;
+                var outputs = cell.output_area.toJSON();
+                var output = outputs[0].text;
+
+                var new_output = process_new_output(cell, output);
+
+                console.log("[agda-extension] new_output: " + new_output);
+
+                outputs[0].text = new_output;
+                cell.clear_output(false, true);
+                cell.output_area.fromJSON(outputs, data.metadata);
+
+            });
         });
 
         // event: on cell selection, highlight the corresponding item
@@ -502,7 +346,21 @@ define([
 
         })
 
-        // events.on('execute.CodeCell', highlight_toc_item);
+        events.on('execute.CodeCell', function(evt, data) {
+
+            // retrieve the contents of the output area
+            var cell = data.cell;
+            var cm = cell.code_mirror;
+            //var len = cm.lineCount();
+
+            var remove_background = function (lineHandle) {
+                // console.log("[agda-extension] removing highlighting from line " + lineHandle);
+                cm.removeLineClass(lineHandle, "background", "compile-error");
+            };
+
+            cm.eachLine(remove_background);
+
+        });
     }
 
     var load_css = function() {
@@ -513,8 +371,36 @@ define([
         document.getElementsByTagName("head")[0].appendChild(link);
     };
 
+    var highlight_error_in_cell = function (cell, from, to) {
+
+        console.log("[agda-extension] highlight_error_in_cell, from: " + from + ", to: " + to);
+
+        if (!cell.metadata.codehighlighter)
+            cell.metadata.codehighlighter = [];
+
+        // save the highlighting information in the metadata
+        cell.metadata.codehighlighter.push([from, to]);
+
+        var cm = cell.code_mirror;
+
+        for (var lineno = from; lineno <= to; lineno++) {
+            console.log("[agda-extension] highlight_error_in_cell, line: " + lineno);
+            cm.addLineClass(lineno - 1, "background", "compile-error");
+        }
+    }
+
+    var highlight_from_metadata = function() {
+        Jupyter.notebook.get_cells().forEach(function(cell) {
+            if (cell.metadata.codehighlighter) {
+                cell.metadata.codehighlighter.forEach(function(range) {
+                    highlight_code_in_cell(cell, range[0], range[1]);
+                });
+            }
+        });
+    }
+
     var load_ipython_extension = function() {
-        load_css();
+        //load_css();
         //events.on("rendered.MarkdownCell", function (event, data) {
         //    render_cell(data.cell);
         // });
@@ -525,14 +411,19 @@ define([
 
         /* Show values stored in metadata on reload */
 
+        var style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = '.compile-error { background: rgb(254, 93, 93); }';
+        document.getElementsByTagName('head')[0].appendChild(style);
+
         events.on("kernel_ready.Kernel", function () {
             if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
-                console.log("[literate-markdown] Notebook fully loaded --  literate-markdown initialized");
-                literate_init();
+                console.log("[agda-extension] Notebook fully loaded --  agda-extension initialized");
+                agda_init();
             } else {
                 events.on("notebook_loaded.Notebook", function () {
-                console.log("[literate-markdown] literate-markdown initialized (via notebook_loaded)");
-                literate_init();
+                console.log("[agda-extension] agda-extension initialized (via notebook_loaded)");
+                agda_init();
                 })
             }
         })       
