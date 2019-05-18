@@ -217,12 +217,42 @@ define([
         cell.render();
     };
 
+    var make_cell_green = function(cell) {
+
+          // make lines green
+          var cm = cell.code_mirror;
+          var mark_green = function (lineHandle) {
+              cm.addLineClass(lineHandle, "background", "compile-ok");
+          };
+
+          cm.eachLine(mark_green);
+
+    }
+
+    var unmake_cell_green = function(cell) {
+
+        var cm = cell.code_mirror;
+        var unmark_green = function (lineHandle) {
+            cm.removeLineClass(lineHandle, "background", "compile-ok");
+        };
+
+        cm.eachLine(unmark_green);
+        
+    }
+
     var process_new_output = function (cell, output) {
 
         if (output == "OK") {
-            // add a green OK badge somewhere
+            make_cell_green(cell);
+            return ""; // no output on successful compilation
         }
-        else {
+        else if (output.match(/^(\*Error\*|\*All Goals, Errors\*)/)) { // if there is an error
+
+//            if (cell.cell_type == "markdown") {
+                console.log("[agda-extension] process_new_output, unrendering cell");
+                // unrender the cell if it is a markdown cell
+                cell.unrender();
+  //          }
 
             /*            
                 *Error*: filename: range
@@ -235,12 +265,12 @@ define([
             
             var full_filename = null, filename = null, from = null, to = null;
 
-            var re_filename = /^\*Error\*\: (.*)\:.*$/g;
+            var re_filename = /^(\*Error\*|\*All Goals, Errors\*)\: (.*)\:.*$/g;
             var parse_filename = re_filename.exec(lines[0]);
 
-            if(parse_filename !== null && parse_filename.length == 2) {
+            if(parse_filename !== null && parse_filename.length > 2) {
 
-                full_filename = parse_filename[1];
+                full_filename = parse_filename[2];
 
                 var re_last = /^.*\/(.*)$/g;
                 parse_filename = re_last.exec(full_filename);
@@ -254,10 +284,10 @@ define([
             }
 
             // line,col1-col2
-            var re1 = /^\*Error\*.*\:.*\:(\d+),(\d+)-(\d+)$/g;
+            var re1 = /^(\*Error\*|\*All Goals, Errors\*).*\:.*\:(\d+),(\d+)-(\d+)$/g;
 
             // line1,col1-line2,col2
-            var re2 = /^\*Error\*.*\:.*\:(\d+),(\d+)-(\d+),(\d+)$/g;
+            var re2 = /^(\*Error\*|\*All Goals, Errors\*).*\:.*\:(\d+),(\d+)-(\d+),(\d+)$/g;
 
             var parse1 = re1.exec(lines[0]);
             var parse2 = re2.exec(lines[0]);
@@ -266,10 +296,10 @@ define([
 
                 console.log("[agda-extension] process_new_output, len2: " + parse2.length);
 
-                if(parse2.length == 5) {
+                if(parse2.length > 5) {
 
-                    from = parse2[1];
-                    to = parse2[3];
+                    from = parse2[2];
+                    to = parse2[4];
 
                 }
 
@@ -278,9 +308,9 @@ define([
 
                 console.log("[agda-extension] process_new_output, len1: " + parse1.length);
                 
-                if (parse1.length == 4) {
+                if (parse1.length > 2) {
 
-                    from = parse1[1];
+                    from = parse1[2];
                     to = from;
                 }
 
@@ -310,6 +340,54 @@ define([
 
     }
 
+    var finished_execute_handler = function(evt, data) {
+
+        // retrieve the contents of the output area
+        var cell = data.cell;
+        var outputs = cell.output_area.toJSON();
+        var output = outputs[0].text;
+
+        var new_output = process_new_output(cell, output);
+
+        console.log("[agda-extension] new_output: " + new_output);
+
+        outputs[0].text = new_output;
+        cell.clear_output(false, true);
+        cell.output_area.fromJSON(outputs, data.metadata);
+
+    };
+
+    var execute_handler = function(evt, data) {
+
+        // retrieve the contents of the output area
+        var cell = data.cell;
+        var cm = cell.code_mirror;
+        //var len = cm.lineCount();
+
+        var remove_background = function (lineHandle) {
+            // console.log("[agda-extension] removing highlighting from line " + lineHandle);
+            cm.removeLineClass(lineHandle, "background", "compile-error");
+        };
+
+        cm.eachLine(remove_background);
+
+    };
+
+    var change_handler = function (evt, data) {
+
+
+
+        var cell = data.cell;
+        var change = data.change;
+
+        if (change) {
+
+            unmake_cell_green(cell);
+
+        }
+
+    };
+
     var agda_init = function() {
         // read configuration, then call toc
         Jupyter.notebook.config.loaded.then(function () {
@@ -321,22 +399,13 @@ define([
             //    render_cell(cell);
             //});
 
-            events.on("finished_execute.CodeCell", function(evt, data) {
+            events.on("finished_execute.CodeCell", finished_execute_handler);
+            events.on("finished_execute.MarkdownCell", finished_execute_handler);
+            events.on("change.Cell", change_handler);
+            events.on('execute.CodeCell', execute_handler);
+            events.on('execute.MarkdownCell', execute_handler);
+    
 
-                // retrieve the contents of the output area
-                var cell = data.cell;
-                var outputs = cell.output_area.toJSON();
-                var output = outputs[0].text;
-
-                var new_output = process_new_output(cell, output);
-
-                console.log("[agda-extension] new_output: " + new_output);
-
-                outputs[0].text = new_output;
-                cell.clear_output(false, true);
-                cell.output_area.fromJSON(outputs, data.metadata);
-
-            });
         });
 
         // event: on cell selection, highlight the corresponding item
@@ -346,21 +415,6 @@ define([
 
         })
 
-        events.on('execute.CodeCell', function(evt, data) {
-
-            // retrieve the contents of the output area
-            var cell = data.cell;
-            var cm = cell.code_mirror;
-            //var len = cm.lineCount();
-
-            var remove_background = function (lineHandle) {
-                // console.log("[agda-extension] removing highlighting from line " + lineHandle);
-                cm.removeLineClass(lineHandle, "background", "compile-error");
-            };
-
-            cm.eachLine(remove_background);
-
-        });
     }
 
     var load_css = function() {
@@ -413,7 +467,7 @@ define([
 
         var style = document.createElement('style');
         style.type = 'text/css';
-        style.innerHTML = '.compile-error { background: rgb(254, 93, 93); }';
+        style.innerHTML = '.compile-error { background: rgb(255, 150, 150); } .compile-ok { background: rgb(240, 255, 245); }';
         document.getElementsByTagName('head')[0].appendChild(style);
 
         events.on("kernel_ready.Kernel", function () {
