@@ -1,0 +1,8 @@
+Type: IPython Notebook Extension
+Name: Agda extension
+Description: Adds features to the jupyter frontend specific to the Agda programming language
+Link: readme.md
+# Icon: python-markdown.png
+Main: main.js
+Preprocessor: pymdpreprocessor.py
+Compatibility: 4.x, 5.x
