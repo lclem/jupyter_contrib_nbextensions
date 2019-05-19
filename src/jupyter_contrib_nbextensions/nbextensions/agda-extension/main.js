@@ -50,7 +50,14 @@ define([
     var TextCell = textcell.TextCell;
     var Notebook = notebook.Notebook;
     var Tooltip = tooltip.Tooltip;
+    var OutputArea = outputarea.OutputArea;
     //var Pager = pager.Pager;
+
+    var original_expand = OutputArea.prototype.expand;
+    OutputArea.prototype.expand = function () {
+        if(!this.do_not_expand)
+            original_expand.call(this);
+    };
 
     // var orig_show = Tooltip.prototype._show;
     Tooltip.prototype._show = function (reply) {
@@ -287,6 +294,7 @@ definition: error1
         // retrieve the contents of the output area
         var cell = data.cell;
         var outputs = cell.output_area.toJSON();
+        cell.output_area.do_not_expand = false;
 
         if(outputs !== undefined && outputs[0] !== undefined) {
 
@@ -320,6 +328,8 @@ definition: error1
 
         // retrieve the contents of the output area
         var cell = data.cell;
+        cell.output_area.collapse();
+        cell.output_area.do_not_expand = true;
         remove_error_highlight(cell);
 
     };
