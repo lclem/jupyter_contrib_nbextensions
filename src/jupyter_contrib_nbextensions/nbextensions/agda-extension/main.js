@@ -121,7 +121,7 @@ define([
 
     var upgrade_cell = function(cell, index) {
 
-        console.log("[agda-extension] reloading cell");
+        //console.log("[agda-extension] reloading cell");
 
         var cell_index = Jupyter.notebook.find_cell_index(cell);
         var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
@@ -204,31 +204,33 @@ define([
 
         /* output examples
 
-        *All Errors*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:2,1-7
-The following names are declared but not accompanied by a
-definition: error1
+            *All Errors*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:2,1-7
+            The following names are declared but not accompanied by a
+            definition: error1
 
-        *Error*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-28
-        Data.Product.Σ P (λ x → Q) !=< P of type Set
-        when checking that the expression A has type NFA Σ (P × Q)
+            *Error*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-28
+            Data.Product.Σ P (λ x → Q) !=< P of type Set
+            when checking that the expression A has type NFA Σ (P × Q)
 
-        *Error*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:5,8-8
-        /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:5,8: Parse error
-        <EOF><ERROR>
-        ...
+            *Error*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:5,8-8
+            /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:5,8: Parse error
+            <EOF><ERROR>
+            ...
 
-        *All Goals, Errors*: ?0 : _58
-        Sort _57  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
-        _58 : _57  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
-        _61 : NFA Σ (P × Q)  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
+            *All Goals, Errors*: ?0 : _58
+            Sort _57  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
+            _58 : _57  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
+            _61 : NFA Σ (P × Q)  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
 
-        ———— Errors ————————————————————————————————————————————————
-        Failed to solve the following constraints:
-        _60 := (_ : _58) [?] :? NFA Σ (P × Q)
+            ———— Errors ————————————————————————————————————————————————
+            Failed to solve the following constraints:
+            _60 := (_ : _58) [?] :? NFA Σ (P × Q)
 
         */
 
-       console.log("[agda-extension] output: \"" + output + "\"");
+        console.log("[agda-extension] output: \"" + output + "\"");
+
+        var new_output = String(output);
 
         if (output == "OK") {
             make_cell_green(cell);
@@ -239,7 +241,7 @@ definition: error1
             make_cell_yellow(cell); // there are open goals, make cell yellow
             return output;
         }
-        else if (output.match(/^\*Error\*|\*All Errors\*|\*All Goals, Errors\*/)) { // if there is an error
+        else if (output.match(/^\*Error\*|\*All Errors\*|\*All Warnings\*|\*All Goals, Errors\*/)) { // if there is an error
 
             if (cell.cell_type == "markdown") {
                 //console.log("[agda-extension] process_new_output, unrendering cell");
@@ -249,43 +251,37 @@ definition: error1
 
             //console.log("[agda-extension] handling error");
 
-            var fname = null;
-            var re = /.*(?![\/])(.*\.agda)\:(\d+),\d+-(\d+)(,\d+)?/g;
+            //var re = /.*(\/.*((?![\/]).*\.agda))\:(\d+),\d+-(\d+)(,\d+)?/g;
+            var re = /(\/.*\/((?![\/]).*\.agda))\:(\d+),\d+-(\d+)(,\d+)?/g;
             var matches = output.matchAll(re);
 
             for (const match of matches) {
 
-                //console.log("[agda-extension] found a match \"" + match + "\"");
+                console.log("[agda-extension] found a match \"" + match + "\"");
+                console.log("[agda-extension] 0: \"" + match[0] + "\", ", "1: \"" + match[1] + "\", ", "2: \"" + match[2] + "\"" + "\", ", "3: \"" + match[3] + "\"");
 
-                fname = match[1];
-                var from = match[2];
+                var long_fname = match[1];
+                var fname = match[2];
+                var from = match[3];
                 var to = from;
 
-                if (match[4] !== undefined) {
-                    to = match[3];
+                if (match[5] !== undefined) {
+                    to = match[4];
                 }
 
                 highlight_error_in_cell_and_store_in_metadata(cell, from, to);
 
-            }
-
-            var re = /(\/.*\.agda)/;
-            var matches = re.exec(output);
-
-            if(matches !== null) {
-
-                var long_fname = matches[0];
-
                 // shorten the filename for readability
-                //console.log("[agda-extension] replacing full filename \"" + long_fname + "\", with: \"" + fname + "\"");
+                console.log("[agda-extension] replacing full filename \"" + long_fname + "\", with: \"" + fname + "\"");
 
-                var re = new RegExp(escape(long_fname), "g");
-                output = output.replace(re, fname);
+                var re1 = new RegExp(escape(long_fname), "g");
+                new_output = new_output.replace(re1, fname);
 
             }
+
         }
 
-        return output;
+        return new_output;
 
     }
 

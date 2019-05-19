@@ -80,7 +80,7 @@ define([
 
     var myMarkdownCell = function (kernel, options) {
 
-        console.log("[literate-markdown] creating new MarkdownCell");
+        //console.log("[literate-markdown] creating new MarkdownCell");
 
         CodeCell.apply(this, [kernel, options]);
         //original_MarkdownCell.call(this, options);
@@ -221,26 +221,35 @@ define([
 
     MarkdownCell.prototype.execute = function (stop_on_error) {
 
-        var text = this.get_text();
+        var orig_text = this.get_text();
+        var text = orig_text.replace(/^````.*$/, "````");
+
         //console.log("execute, current text: " + text);
 
-        // extract blocks of code between executable code chunks markers "````"
+        // extract blocks of code between executable code chunk markers "````"
         var blocks = text.split('````');
 
         // we are interested in odd blocks        
         var code = "";
-        for (var i = 0; i < blocks.length; i++) {
+        for (var i = 0; i < blocks.length - 1; i++) {
 
-            // even blocks contain markup code and are replaced by blank lines;
+            // even blocks contain markup code and are replaced by blank lines,
+            // ***of the same length as the replaced line***
+            // (this is important to preserve character counts when interfacing with the kernel);
             // this helps the kernel giving error messages with the correct line numbers
             if (i % 2 == 0) { 
                 var lines = blocks[i].split('\n');
                 for (var j = 0; j < lines.length - 1; j++) {
-                    code += "\n";
+                    //if(lines[j].length > 0)
+                    code += " ".repeat(lines[j].length) +  "\n";
                 }
+                code += "    "; // for "````"
             }
-            else // odd blocks contain executable code
-                code += blocks[i];
+            // odd blocks contain executable code                
+            else {
+                code += blocks[i]; //.split("\n").slice(0,-1).join("\n");
+                code += "    "
+            }
         }
 
         //console.log("Extracted executable code chunks: \n" + code);
@@ -249,7 +258,7 @@ define([
         MarkdownCell.prototype.set_text.call(this, code);
         CodeCell.prototype.execute.call(this, stop_on_error);
         this.rendered = false;
-        MarkdownCell.prototype.set_text.call(this, text);
+        MarkdownCell.prototype.set_text.call(this, orig_text);
         MarkdownCell.prototype.render.call(this);
         this.auto_highlight();
 
@@ -359,7 +368,7 @@ define([
 
     Notebook.prototype.insert_cell_at_index = function(type, index){
 
-        console.log("[literate-markdown] inserting a new cell of type: ", type);
+        //console.log("[literate-markdown] inserting a new cell of type: ", type);
 
         var ncells = this.ncells();
         index = Math.min(index, ncells);
@@ -454,7 +463,7 @@ define([
 
         if (cell.cell_type === 'markdown') {
 
-            console.log("[literate-markdown] upgrading cell");
+            //console.log("[literate-markdown] upgrading cell");
 
             var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
             new_cell.unrender();
