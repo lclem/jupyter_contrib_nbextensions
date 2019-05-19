@@ -128,7 +128,7 @@ define([
         Cell.prototype.create_element.apply(this, arguments);
         var that = this;
 
-        var cell =  $('<div></div>').addClass('cell code_cell literate_cell');
+        var cell =  $('<div></div>').addClass('cell code_cell literate_cell markdown_cell');
         cell.attr('tabindex','2');
 
         var input = $('<div></div>').addClass('input');
@@ -421,6 +421,35 @@ define([
 
     };
 
+    Notebook.prototype.to_code = function (index) {
+        var i = this.index_or_selected(index);
+        if (this.is_valid_cell_index(i)) {
+            var source_cell = this.get_cell(i);
+            if (/*!(source_cell instanceof codecell.CodeCell)*/ source_cell.cell_type !== "code" && source_cell.is_editable()) { // only change
+                var target_cell = this.insert_cell_below('code',i);
+                var text = source_cell.get_text();
+                if (text === source_cell.placeholder) {
+                    text = '';
+                }
+                //metadata
+                target_cell.metadata = source_cell.metadata;
+                // attachments (we transfer them so they aren't lost if the
+                // cell is turned back into markdown)
+                target_cell.attachments = source_cell.attachments;
+
+                target_cell.set_text(text);
+                // make this value the starting point, so that we can only undo
+                // to this state, instead of a blank cell
+                target_cell.code_mirror.clearHistory();
+                source_cell.element.remove();
+                this.select(i);
+                var cursor = source_cell.code_mirror.getCursor();
+                target_cell.code_mirror.setCursor(cursor);
+                this.set_dirty(true);
+            }
+        }
+    };
+
     var upgrade_cell = function(cell, index) {
 
         if (cell.cell_type === 'markdown') {
@@ -446,8 +475,7 @@ define([
         //    element[0].innerHTML = text;
         //    MathJax.Hub.Queue(["Typeset",MathJax.Hub,element[0]]);
         //}
-
-        console.log("[literate-markdown] rendering cell");
+        //console.log("[literate-markdown] rendering cell");
         cell.rendered = false;
         cell.render();
     };
