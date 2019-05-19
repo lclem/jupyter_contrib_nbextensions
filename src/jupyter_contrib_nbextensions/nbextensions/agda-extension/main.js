@@ -148,8 +148,6 @@ define([
         //    element[0].innerHTML = text;
         //    MathJax.Hub.Queue(["Typeset",MathJax.Hub,element[0]]);
         //}
-
-        console.log("[literate-markdown] rendering cell");
         cell.rendered = false;
         cell.render();
     };
@@ -242,13 +240,15 @@ definition: error1
                 cell.unrender();
             }
 
+            console.log("[agda-extension] handling error");
+
             var fname = null;
-            var re = /\/.*\/(?![\/])(.*\.agda)\:(\d+),\d+-(\d+)(,\d+)?/g;
+            var re = /.*(?![\/])(.*\.agda)\:(\d+),\d+-(\d+)(,\d+)?/g;
             var matches = output.matchAll(re);
 
             for (const match of matches) {
 
-                //console.log("[agda-extension] found a match \"" + match + "\"");
+                console.log("[agda-extension] found a match \"" + match + "\"");
 
                 fname = match[1];
                 var from = match[2];
