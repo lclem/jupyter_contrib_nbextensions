@@ -15,6 +15,8 @@ define([
     'notebook/js/completer',
     'notebook/js/celltoolbar',
     'notebook/js/notebook',
+    'notebook/js/tooltip',
+    'notebook/js/pager',
     'codemirror/lib/codemirror',
     'codemirror/mode/python/python',
     'notebook/js/codemirror-ipython'
@@ -35,6 +37,8 @@ define([
     completer,
     celltoolbar,
     notebook,
+    tooltip,
+    pager,
     CodeMirror,
     cmpython,
     cmip
@@ -45,6 +49,52 @@ define([
     var CodeCell = codecell.CodeCell;
     var TextCell = textcell.TextCell;
     var Notebook = notebook.Notebook;
+    var Tooltip = tooltip.Tooltip;
+    //var Pager = pager.Pager;
+
+    // var orig_show = Tooltip.prototype._show;
+    Tooltip.prototype._show = function (reply) {
+
+        //orig_show.call(this, reply);
+
+        this._reply = reply;
+        var content = reply.content;
+        //this.events.trigger('collapse_pager.Pager', content);
+
+        if (!content.found) {
+            // object not found, nothing to show
+            return;
+        }
+
+        this.name = content.name;
+        this.cancel_stick();
+
+        Jupyter.pager.clear();
+        Jupyter.pager.expanded = true;
+        
+        var payload = content;
+
+        if (payload.data['text/html'] && payload.data['text/html'] !== "") {
+                Jupyter.pager.append(payload.data['text/html']);
+        } else if (payload.data['text/plain'] && payload.data['text/plain'] !== "") {
+                Jupyter.pager.append_text(payload.data['text/plain']);
+        }
+
+        Jupyter.pager.pager_element.height('initial');
+        Jupyter.pager.pager_element.show("fast", function () {
+                Jupyter.pager.pager_element.height(Jupyter.pager.pager_element.height());
+                Jupyter.pager._resize();
+                Jupyter.pager.pager_element.css('position', 'relative');
+                //window.requestAnimationFrame(function() { /* Wait one frame */                    
+                    Jupyter.pager.pager_element.css('position', '');
+                //});
+            }
+        );
+
+        //this.showInPager(this._old_cell);
+        //this.events.trigger('open_with_text.Pager', this._reply.content);
+
+    }
 
     var escape = function(s) {
         return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -57,137 +107,24 @@ define([
         } else {
             ns = encodeURIComponent(prompt_value);
         }
-        return '[' + ns + ']';
+        return ''; // '[' + ns + ']';
     };
 
     CodeCell.input_prompt_function = agda_input_prompt;
-
-    /*
-    MarkdownCell.prototype.execute = function (stop_on_error) {
-
-        var text = this.get_text();
-        //console.log("execute, current text: " + text);
-
-        // extract blocks of code between executable code chunks markers "````"
-        var blocks = text.split('````');
-
-        // we are interested in odd blocks        
-        var code = "";
-        for (var i = 0; i < blocks.length; i++) {
-
-            // even blocks contain markup code and are replaced by blank lines;
-            // this helps the kernel giving error messages with the correct line numbers
-            if (i % 2 == 0) { 
-                var lines = blocks[i].split('\n');
-                for (var j = 0; j < lines.length - 1; j++) {
-                    code += "\n";
-                }
-            }
-            else // odd blocks contain executable code
-                code += blocks[i];
-        }
-
-        //console.log("Extracted executable code chunks: \n" + code);
-
-        this.rendered = false;
-        MarkdownCell.prototype.set_text.call(this, code);
-        CodeCell.prototype.execute.call(this, stop_on_error);
-        this.rendered = false;
-        MarkdownCell.prototype.set_text.call(this, text);
-        MarkdownCell.prototype.render.call(this);
-        this.auto_highlight();
-
-    };
-
-    MarkdownCell.prototype.render = function () {
-
-        var text = this.get_text();
-        var blocks = text.split('````');
-        var code = "";
-
-        //console.log("Blocks: " + blocks);
-
-        if (blocks.length > 0 && this.kernel) {
-
-            var kernel = this.kernel.name;
-            //console.log("[literate-markdown] current kernel: " + kernel);
-    
-            for (var i = 0; i < blocks.length; i++) {
-                code += blocks[i];
-                i++;
-                if (i < blocks.length) {
-                    code += '```' + kernel; // instruct codemirror to render the code with the current kernel name
-                    code += blocks[i];
-                    code += '```';
-                }
-            }
-        }
-        else
-            code = text;
-
-        this.unrender();
-        this.code_mirror.setValue(code);
-        var cont = original_render.apply(this);
-        this.code_mirror.setValue(text);
-        //this.rendered = true;
-        return cont;
-        
-    };
-    */
-
-    /*
-    MarkdownCell.prototype.fromJSON = function (data) {
-
-        console.log("[literate-markdown] called fromJSON");
-
-        Cell.prototype.fromJSON.apply(this, arguments);
-        if (data.cell_type === 'markdown') {
-
-            if (data.attachments !== undefined) {
-                this.attachments = data.attachments;
-            }
-
-            if (data.source !== undefined) {
-                this.set_text(data.source);
-                // make this value the starting point, so that we can only undo
-                // to this state, instead of a blank cell
-                this.code_mirror.clearHistory();
-                this.auto_highlight();
-                // TODO: This HTML needs to be treated as potentially dangerous
-                // user input and should be handled before set_rendered.
-                this.set_rendered(data.rendered || '');
-                render_cell(this);
-            }
-
-            if (data.execution_count !== undefined) {
-                // this.set_input_prompt(data.execution_count);
-            }
-
-            this.output_area.trusted = data.metadata.trusted || false;
-
-            if (data.outputs !== undefined) {
-                // this.output_area.fromJSON(data.outputs, data.metadata);
-            }
-        }
-    };
-
-    MarkdownCell.prototype.toJSON = function () {
-        var data = original_toJSON.apply(this);
-
-        return data;
-    };
-
-    */
 
     var upgrade_cell = function(cell, index) {
 
         console.log("[agda-extension] reloading cell");
 
+        var cell_index = Jupyter.notebook.find_cell_index(cell);
         var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
         new_cell.unrender();
+        new_cell.fromJSON(JSON.stringify(cell.toJSON()));
+        /*
         new_cell.set_text(cell.get_text());
+        new_cell.output_area = JSON.parse(JSON.stringify(cell.output_area));
         new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
-        var cell_index = Jupyter.notebook.find_cell_index(cell);
+        */
         Jupyter.notebook.delete_cell(cell_index);
         render_cell(new_cell);
 
@@ -242,98 +179,78 @@ define([
 
     var process_new_output = function (cell, output) {
 
+        /* output examples
+
+        *All Errors*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:2,1-7
+The following names are declared but not accompanied by a
+definition: error1
+
+        *Error*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-28
+        Data.Product.Σ P (λ x → Q) !=< P of type Set
+        when checking that the expression A has type NFA Σ (P × Q)
+
+        *Error*: /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:5,8-8
+        /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/test.agda:5,8: Parse error
+        <EOF><ERROR>
+        ...
+
+        *All Goals, Errors*: ?0 : _58
+        Sort _57  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
+        _58 : _57  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
+        _61 : NFA Σ (P × Q)  [ at /Users/lorenzo/Dropbox/Workspace/teaching/Teaching/2018-2019/summer semester/LDI (logika dla informatyków)/lab/agda/raw_material/code/coinduction.agda:53,27-30 ]
+
+        ———— Errors ————————————————————————————————————————————————
+        Failed to solve the following constraints:
+        _60 := (_ : _58) [?] :? NFA Σ (P × Q)
+
+        */
+
         if (output == "OK") {
             make_cell_green(cell);
             return ""; // no output on successful compilation
         }
-        else if (output.match(/^(\*Error\*|\*All Goals, Errors\*)/)) { // if there is an error
+        else if (output.match(/^\*Error\*|\*All Errors\*|\*All Goals, Errors\*/)) { // if there is an error
 
-//            if (cell.cell_type == "markdown") {
-                console.log("[agda-extension] process_new_output, unrendering cell");
+            if (cell.cell_type == "markdown") {
+                //console.log("[agda-extension] process_new_output, unrendering cell");
                 // unrender the cell if it is a markdown cell
                 cell.unrender();
-  //          }
+            }
 
-            /*            
-                *Error*: filename: range
-                range: 57,18-18
-                range: 56,5-57,17
-            */
+            var fname = null;
+            var re = /\/.*\/(?![\/])(.*\.agda)\:(\d+),\d+-(\d+)(,\d+)?/g;
+            var matches = output.matchAll(re);
 
-            console.log("[agda-extension] process_new_output, output: " + output);
-            var lines = output.split('\n');
-            
-            var full_filename = null, filename = null, from = null, to = null;
+            for (const match of matches) {
 
-            var re_filename = /^(\*Error\*|\*All Goals, Errors\*)\: (.*)\:.*$/g;
-            var parse_filename = re_filename.exec(lines[0]);
+                //console.log("[agda-extension] found a match \"" + match + "\"");
 
-            if(parse_filename !== null && parse_filename.length > 2) {
+                fname = match[1];
+                var from = match[2];
+                var to = from;
 
-                full_filename = parse_filename[2];
-
-                var re_last = /^.*\/(.*)$/g;
-                parse_filename = re_last.exec(full_filename);
-
-                if(parse_filename !== null && parse_filename.length == 2) {
-
-                    filename = parse_filename[1];
-
+                if (match[4] !== undefined) {
+                    to = match[3];
                 }
 
-            }
-
-            // line,col1-col2
-            var re1 = /^(\*Error\*|\*All Goals, Errors\*).*\:.*\:(\d+),(\d+)-(\d+)$/g;
-
-            // line1,col1-line2,col2
-            var re2 = /^(\*Error\*|\*All Goals, Errors\*).*\:.*\:(\d+),(\d+)-(\d+),(\d+)$/g;
-
-            var parse1 = re1.exec(lines[0]);
-            var parse2 = re2.exec(lines[0]);
-
-            if (parse2 !== null) {
-
-                console.log("[agda-extension] process_new_output, len2: " + parse2.length);
-
-                if(parse2.length > 5) {
-
-                    from = parse2[2];
-                    to = parse2[4];
-
-                }
-
-            }
-            else if (parse1 !== null) {
-
-                console.log("[agda-extension] process_new_output, len1: " + parse1.length);
-                
-                if (parse1.length > 2) {
-
-                    from = parse1[2];
-                    to = from;
-                }
+                highlight_error_in_cell_and_store_in_metadata(cell, from, to);
 
             }
 
-            console.log("[agda-extension] process_new_output, from: " + from + ", to: " + to);
+            var re = /(\/.*\.agda)/;
+            var matches = re.exec(output);
 
-            if(from !== null && to !== null) {
+            if(matches !== null) {
 
-                highlight_error_in_cell(cell, from, to);
-
-            }
-
-            if(full_filename !== null && filename !== null) {
+                var long_fname = matches[0];
 
                 // shorten the filename for readability
-                console.log("[agda-extension] replacing full filename \"" + full_filename + "\", with: \"" + filename + "\"");
+                //console.log("[agda-extension] replacing full filename \"" + long_fname + "\", with: \"" + fname + "\"");
 
-                var re = new RegExp(escape(full_filename), "gi");
-                output = output.replace(re, filename);
+                var re = new RegExp(escape(long_fname), "g");
+                output = output.replace(re, fname);
 
             }
-
         }
 
         return output;
@@ -345,22 +262,22 @@ define([
         // retrieve the contents of the output area
         var cell = data.cell;
         var outputs = cell.output_area.toJSON();
-        var output = outputs[0].text;
 
-        var new_output = process_new_output(cell, output);
+        if(outputs !== undefined && outputs[0] !== undefined) {
 
-        console.log("[agda-extension] new_output: " + new_output);
+            var output = outputs[0].text;
+            var new_output = process_new_output(cell, output);
 
-        outputs[0].text = new_output;
-        cell.clear_output(false, true);
-        cell.output_area.fromJSON(outputs, data.metadata);
+            //console.log("[agda-extension] finished_execute_handler, new_output: " + new_output);
 
+            outputs[0].text = new_output;
+            cell.clear_output(false, true);
+            cell.output_area.fromJSON(outputs, data.metadata);
+        }
     };
 
-    var execute_handler = function(evt, data) {
+    var remove_error_highlight = function(cell) {
 
-        // retrieve the contents of the output area
-        var cell = data.cell;
         var cm = cell.code_mirror;
         //var len = cm.lineCount();
 
@@ -370,12 +287,19 @@ define([
         };
 
         cm.eachLine(remove_background);
+        cell.metadata.codehighlighter = [];
+
+    };
+
+    var execute_handler = function(evt, data) {
+
+        // retrieve the contents of the output area
+        var cell = data.cell;
+        remove_error_highlight(cell);
 
     };
 
     var change_handler = function (evt, data) {
-
-
 
         var cell = data.cell;
         var change = data.change;
@@ -383,6 +307,7 @@ define([
         if (change) {
 
             unmake_cell_green(cell);
+            remove_error_highlight(cell);
 
         }
 
@@ -393,18 +318,40 @@ define([
         Jupyter.notebook.config.loaded.then(function () {
 
             upgrade_cells();
- 
+            highlight_from_metadata();
+
             //events.on("rendered.MarkdownCell", function(evt, data) {
             //    var cell = $(data.cell);;
             //    render_cell(cell);
             //});
+
+            var pager = Jupyter.pager;
+            //pager.pager_button_area.remove();
+            //pager.pager_button_area = $('#pager-button-area');
+
+            // hide the previous buttons
+            var buttons = document.getElementsByClassName('ui-button');
+            for (var i = 0; i < buttons.length; i++) {
+                //y[i].style.backgroundColor = "red";
+                buttons[i].style.visibility = 'hidden';
+            }
+            
+            // add a single close button
+            pager.pager_button_area.append(
+                $('<a>').attr('role', "button")
+                    .attr('title',i18n.msg._("Close the pager"))
+                    .addClass('ui-button')
+                    .click(function(){pager.collapse();})
+                    .append(
+                        $('<span>').addClass("ui-icon ui-icon-close")
+                    )
+            );
 
             events.on("finished_execute.CodeCell", finished_execute_handler);
             events.on("finished_execute.MarkdownCell", finished_execute_handler);
             events.on("change.Cell", change_handler);
             events.on('execute.CodeCell', execute_handler);
             events.on('execute.MarkdownCell', execute_handler);
-    
 
         });
 
@@ -425,9 +372,9 @@ define([
         document.getElementsByTagName("head")[0].appendChild(link);
     };
 
-    var highlight_error_in_cell = function (cell, from, to) {
+    var highlight_error_in_cell_and_store_in_metadata = function (cell, from, to) {
 
-        console.log("[agda-extension] highlight_error_in_cell, from: " + from + ", to: " + to);
+        //console.log("[agda-extension] highlight_error_in_cell, from: " + from + ", to: " + to);
 
         if (!cell.metadata.codehighlighter)
             cell.metadata.codehighlighter = [];
@@ -435,10 +382,14 @@ define([
         // save the highlighting information in the metadata
         cell.metadata.codehighlighter.push([from, to]);
 
+        highlight_error_in_cell(cell, from, to);
+    };
+
+    var highlight_error_in_cell = function (cell, from, to) {
+
         var cm = cell.code_mirror;
 
         for (var lineno = from; lineno <= to; lineno++) {
-            console.log("[agda-extension] highlight_error_in_cell, line: " + lineno);
             cm.addLineClass(lineno - 1, "background", "compile-error");
         }
     }
@@ -447,7 +398,7 @@ define([
         Jupyter.notebook.get_cells().forEach(function(cell) {
             if (cell.metadata.codehighlighter) {
                 cell.metadata.codehighlighter.forEach(function(range) {
-                    highlight_code_in_cell(cell, range[0], range[1]);
+                    highlight_error_in_cell(cell, range[0], range[1]);
                 });
             }
         });
