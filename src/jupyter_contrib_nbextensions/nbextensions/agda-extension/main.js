@@ -154,6 +154,26 @@ define([
         cell.render();
     };
 
+    var make_cell_yellow = function(cell) {
+
+        var cm = cell.code_mirror;
+        var mark_yellow = function (lineHandle) {
+            cm.addLineClass(lineHandle, "background", "compile-holes");
+        };
+
+        cm.eachLine(mark_yellow);
+    }
+
+    var unmake_cell_yellow = function(cell) {
+
+        var cm = cell.code_mirror;
+        var unmark_yellow = function (lineHandle) {
+            cm.removeLineClass(lineHandle, "background", "compile-holes");
+        };
+
+        cm.eachLine(unmark_yellow);
+    }
+
     var make_cell_green = function(cell) {
 
           // make lines green
@@ -163,7 +183,6 @@ define([
           };
 
           cm.eachLine(mark_green);
-
     }
 
     var unmake_cell_green = function(cell) {
@@ -174,7 +193,6 @@ define([
         };
 
         cm.eachLine(unmark_green);
-        
     }
 
     var process_new_output = function (cell, output) {
@@ -205,9 +223,16 @@ definition: error1
 
         */
 
+       console.log("[agda-extension] output: \"" + output + "\"");
+
         if (output == "OK") {
             make_cell_green(cell);
             return ""; // no output on successful compilation
+        }
+        else if (output.match(/^\?0/)) { // (^(\*All Goals\*/|\?0)/))) {
+            console.log("[agda-extension] make cell yellow");
+            make_cell_yellow(cell); // there are open goals, make cell yellow
+            return output;
         }
         else if (output.match(/^\*Error\*|\*All Errors\*|\*All Goals, Errors\*/)) { // if there is an error
 
@@ -307,6 +332,7 @@ definition: error1
         if (change) {
 
             unmake_cell_green(cell);
+            unmake_cell_yellow(cell);
             remove_error_highlight(cell);
 
         }
@@ -418,7 +444,7 @@ definition: error1
 
         var style = document.createElement('style');
         style.type = 'text/css';
-        style.innerHTML = '.compile-error { background: rgb(255, 150, 150); } .compile-ok { background: rgb(240, 255, 245); }';
+        style.innerHTML = '.compile-error { background: rgb(255, 150, 150); } .compile-ok { background: rgb(225, 255, 225); } .compile-holes { background: rgb(255, 255, 225); }';
         document.getElementsByTagName('head')[0].appendChild(style);
 
         events.on("kernel_ready.Kernel", function () {
