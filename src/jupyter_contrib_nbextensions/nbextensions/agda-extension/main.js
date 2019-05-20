@@ -47,6 +47,9 @@ define([
     ) {
     "use strict";
     
+    var mod_name = 'agda-extension';
+    var log_prefix = '[' + mod_name + ']';
+
     var Kernel = kernel.Kernel;
     var Cell = cell.Cell;
     var CodeCell = codecell.CodeCell;
@@ -155,25 +158,28 @@ define([
 
     var upgrade_cell = function(cell, index) {
 
-        //console.log("[agda-extension] reloading cell");
+        console.log("[agda-extension] reloading cell with index: " + index);
 
         var cell_index = Jupyter.notebook.find_cell_index(cell);
+
         var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
         new_cell.unrender();
         new_cell.fromJSON(JSON.stringify(cell.toJSON()));
+
+        // additionally run the cell
+        //if (new_cell instanceof MarkdownCell) {
+        new_cell.execute();
+        //}
+
         /*
         new_cell.set_text(cell.get_text());
         new_cell.output_area = JSON.parse(JSON.stringify(cell.output_area));
         new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
         */
+       
         Jupyter.notebook.delete_cell(cell_index);
-        //render_cell(new_cell);
+        render_cell(new_cell);
 
-        // additionally run the cell if it is a Markdown one
-        if (new_cell instanceof MarkdownCell) {
-            new_cell.execute();
-        }
-        
     }
 
     var upgrade_cells = function () {
@@ -424,7 +430,9 @@ define([
     var agda_init = function() {
         Jupyter.notebook.config.loaded.then(function () {
 
-            upgrade_cells();
+            console.log("[agda-extension] init");
+
+            //upgrade_cells();
             highlight_from_metadata();
 
             //events.on("rendered.MarkdownCell", function(evt, data) {
@@ -466,9 +474,7 @@ define([
         // event: on cell selection, highlight the corresponding item
         //events.on('select.Cell', highlight_toc_item);
             // event: if kernel_ready (kernel change/restart): add/remove a menu item
-        events.on("kernel_ready.Kernel", function() {
-
-        })
+        //events.on("kernel_ready.Kernel", function() { })
 
     }
 
@@ -529,9 +535,9 @@ define([
         style.innerHTML = '.compile-error { background: rgb(255, 150, 150); } .compile-ok { background: rgb(225, 255, 225); } .compile-holes { background: rgb(255, 255, 225); }';
         document.getElementsByTagName('head')[0].appendChild(style);
 
-        events.on("kernel_ready.Kernel", function () {
+        Jupyter.notebook.config.loaded.then(function () {
             if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
-                console.log("[agda-extension] Notebook fully loaded --  agda-extension initialized");
+                console.log("[agda-extension] Notebook fully loaded -- agda-extension initialized");
                 agda_init();
             } else {
                 events.on("notebook_loaded.Notebook", function () {
@@ -539,7 +545,23 @@ define([
                 agda_init();
                 })
             }
-        })       
+        }).catch(function (reason) {
+            console.error(log_prefix, 'unhandled error:', reason);
+        });
+
+        /*
+        events.on("kernel_ready.Kernel", function () {
+            if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
+                console.log("[agda-extension] Notebook fully loaded -- agda-extension initialized");
+                agda_init();
+            } else {
+                events.on("notebook_loaded.Notebook", function () {
+                console.log("[agda-extension] agda-extension initialized (via notebook_loaded)");
+                agda_init();
+                })
+            }
+        })
+        */
     };
 
     return {
