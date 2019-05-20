@@ -224,7 +224,7 @@ define([
         var orig_text = this.get_text();
         var text = orig_text.replace(/^````.*$/, "````");
 
-        //console.log("[literate-markdown] execute, current text: " + text);
+        console.log("[literate-markdown] execute cell");
 
         // extract blocks of code between executable code chunk markers "````"
         var blocks = text.split('````');
@@ -463,7 +463,7 @@ define([
 
         if (cell.cell_type === 'markdown') {
 
-            //console.log("[literate-markdown] upgrading cell");
+            console.log("[literate-markdown] reloading cell with index: " + index);
 
             var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
             new_cell.unrender();
@@ -471,8 +471,12 @@ define([
             new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
             var cell_index = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cell_index);
-            render_cell(new_cell);
+            //render_cell(new_cell);
+            new_cell.execute();
 
+        }
+        else {
+            cell.execute();
         }
 
     }
