@@ -523,25 +523,12 @@ define([
 
     };
 
-    var flag = true;
-
     var literate_init = function() {
         // read configuration, then call toc
         Jupyter.notebook.config.loaded.then(function () {
 
             update_md_cells();
 
-            if(flag) { // do it only once to avoid a loop
-
-                // hack to force the init_cell plugin to re-initialise cells
-                // (required for the markdown cells, which are not initialised
-                // if the init_cell plugin is loaded before the literate-markdown plugin)
-
-                //events.trigger('kernel_ready.Kernel', {kernel : Jupyter.notebook.session.kernel});
-                flag = false;
-
-            }
- 
             //events.on("rendered.MarkdownCell", function(evt, data) {
             //    var cell = $(data.cell);;
             //    render_cell(cell);
@@ -576,16 +563,14 @@ define([
         /* Show values stored in metadata on reload */
 
         events.on("kernel_ready.Kernel", function () {
-            if(flag){ 
-                if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
-                    console.log("[literate-markdown] Notebook fully loaded --  literate-markdown initialized");
-                    literate_init();
-                } else {
-                    events.on("notebook_loaded.Notebook", function () {
-                    console.log("[literate-markdown] literate-markdown initialized (via notebook_loaded)");
-                    literate_init();
-                    })
-                }
+            if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
+                console.log("[literate-markdown] Notebook fully loaded --  literate-markdown initialized");
+                literate_init();
+            } else {
+                events.on("notebook_loaded.Notebook", function () {
+                console.log("[literate-markdown] literate-markdown initialized (via notebook_loaded)");
+                literate_init();
+                })
             }
         })       
     };
