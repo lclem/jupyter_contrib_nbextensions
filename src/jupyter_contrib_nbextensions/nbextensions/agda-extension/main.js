@@ -51,6 +51,7 @@ define([
     var Cell = cell.Cell;
     var CodeCell = codecell.CodeCell;
     var TextCell = textcell.TextCell;
+    var MarkdownCell = textcell.MarkdownCell;
     var Notebook = notebook.Notebook;
     var Tooltip = tooltip.Tooltip;
     var OutputArea = outputarea.OutputArea;
@@ -166,8 +167,13 @@ define([
         new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
         */
         Jupyter.notebook.delete_cell(cell_index);
-        render_cell(new_cell);
+        //render_cell(new_cell);
 
+        // additionally run the cell if it is a Markdown one
+        if (new_cell instanceof MarkdownCell) {
+            new_cell.execute();
+        }
+        
     }
 
     var upgrade_cells = function () {
