@@ -224,7 +224,7 @@ define([
         var orig_text = this.get_text();
         var text = orig_text.replace(/^````.*$/, "````");
 
-        //console.log("execute, current text: " + text);
+        //console.log("[literate-markdown] execute, current text: " + text);
 
         // extract blocks of code between executable code chunk markers "````"
         var blocks = text.split('````');
@@ -301,7 +301,7 @@ define([
 
     MarkdownCell.prototype.fromJSON = function (data) {
 
-        console.log("[literate-markdown] called fromJSON");
+        //console.log("[literate-markdown] called fromJSON");
 
         Cell.prototype.fromJSON.apply(this, arguments);
         if (data.cell_type === 'markdown') {
@@ -523,11 +523,24 @@ define([
 
     };
 
+    var flag = true;
+
     var literate_init = function() {
         // read configuration, then call toc
         Jupyter.notebook.config.loaded.then(function () {
 
             update_md_cells();
+
+            if(flag) { // do it only once to avoid a loop
+
+                // hack to force the init_cell plugin to re-initialise cells
+                // (required for the markdown cells, which are not initialised
+                // if the init_cell plugin is loaded before the literate-markdown plugin)
+
+                //events.trigger('kernel_ready.Kernel', {kernel : Jupyter.notebook.session.kernel});
+                flag = false;
+
+            }
  
             //events.on("rendered.MarkdownCell", function(evt, data) {
             //    var cell = $(data.cell);;
@@ -538,10 +551,7 @@ define([
         // event: on cell selection, highlight the corresponding item
         //events.on('select.Cell', highlight_toc_item);
             // event: if kernel_ready (kernel change/restart): add/remove a menu item
-        events.on("kernel_ready.Kernel", function() {
-
-        })
-
+        //events.on("kernel_ready.Kernel", function() { })
         // events.on('execute.CodeCell', highlight_toc_item);
     }
 
@@ -566,14 +576,16 @@ define([
         /* Show values stored in metadata on reload */
 
         events.on("kernel_ready.Kernel", function () {
-            if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
-                console.log("[literate-markdown] Notebook fully loaded --  literate-markdown initialized");
-                literate_init();
-            } else {
-                events.on("notebook_loaded.Notebook", function () {
-                console.log("[literate-markdown] literate-markdown initialized (via notebook_loaded)");
-                literate_init();
-                })
+            if(flag){ 
+                if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
+                    console.log("[literate-markdown] Notebook fully loaded --  literate-markdown initialized");
+                    literate_init();
+                } else {
+                    events.on("notebook_loaded.Notebook", function () {
+                    console.log("[literate-markdown] literate-markdown initialized (via notebook_loaded)");
+                    literate_init();
+                    })
+                }
             }
         })       
     };
