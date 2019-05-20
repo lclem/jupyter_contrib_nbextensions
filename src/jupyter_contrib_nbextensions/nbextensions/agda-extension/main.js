@@ -8,6 +8,7 @@ define([
     'services/config',
     'notebook/js/mathjaxutils',
     'base/js/events',
+    'services/kernels/kernel',
     'notebook/js/cell',
     'notebook/js/textcell',
     'notebook/js/codecell',
@@ -30,6 +31,7 @@ define([
     configmod,
     mathjaxutils,
     events,
+    kernel,
     cell,
     textcell,
     codecell,
@@ -45,6 +47,7 @@ define([
     ) {
     "use strict";
     
+    var Kernel = kernel.Kernel;
     var Cell = cell.Cell;
     var CodeCell = codecell.CodeCell;
     var TextCell = textcell.TextCell;
@@ -52,6 +55,36 @@ define([
     var Tooltip = tooltip.Tooltip;
     var OutputArea = outputarea.OutputArea;
     //var Pager = pager.Pager;
+
+    var old_handle_input_request = Kernel.prototype._handle_input_request;
+    Kernel.prototype._handle_input_request = function (request) {
+        //console.log("_handle_input_request request: ", request);
+        old_handle_input_request.call(this, request);
+    };
+
+    var old_handle_input_message = Kernel.prototype._handle_input_message;
+    Kernel.prototype._handle_input_message = function (msg) {
+        //console.log("_handle_input_message msg: ", msg);
+        old_handle_input_message.call(this, msg);
+    };
+
+    var old_handle_output_message = Kernel.prototype._handle_output_message;
+    Kernel.prototype._handle_output_message = function (msg) {
+        //console.log("_handle_output_message msg: ", msg);
+        old_handle_output_message.call(this, msg);
+    };
+
+    var old_handle_status_message = Kernel.prototype._handle_status_message;
+    Kernel.prototype._handle_status_message = function (msg) {
+        //console.log("_handle_status_message msg: ", msg);
+        old_handle_status_message.call(this, msg);
+    };
+
+    var old_handle_shell_reply = Kernel.prototype._handle_shell_reply;
+    Kernel.prototype._handle_shell_reply = function (reply) {
+        //console.log("_handle_shell_reply reply: ", reply);
+        old_handle_shell_reply.call(this, reply);
+    };
 
     var original_expand = OutputArea.prototype.expand;
     OutputArea.prototype.expand = function () {
@@ -228,9 +261,11 @@ define([
 
         */
 
-        console.log("[agda-extension] output: \"" + output + "\"");
+        //console.log("[agda-extension] output: \"" + output + "\"");
 
         var new_output = String(output);
+
+        //console.log("[agda-extension] process output, cell filename: " + cell.metadata.fileName);
 
         if (output == "OK") {
             make_cell_green(cell);
@@ -257,8 +292,8 @@ define([
 
             for (const match of matches) {
 
-                console.log("[agda-extension] found a match \"" + match + "\"");
-                console.log("[agda-extension] 0: \"" + match[0] + "\", ", "1: \"" + match[1] + "\", ", "2: \"" + match[2] + "\"" + "\", ", "3: \"" + match[3] + "\"");
+                //console.log("[agda-extension] found a match \"" + match + "\"");
+                //console.log("[agda-extension] 0: \"" + match[0] + "\", ", "1: \"" + match[1] + "\", ", "2: \"" + match[2] + "\"" + "\", ", "3: \"" + match[3] + "\"");
 
                 var long_fname = match[1];
                 var fname = match[2];
@@ -269,10 +304,12 @@ define([
                     to = match[4];
                 }
 
-                highlight_error_in_cell_and_store_in_metadata(cell, from, to);
+                // check whether the error is in this cell
+                if (long_fname === cell.metadata.fileName)
+                    highlight_error_in_cell_and_store_in_metadata(cell, from, to);
 
                 // shorten the filename for readability
-                console.log("[agda-extension] replacing full filename \"" + long_fname + "\", with: \"" + fname + "\"");
+                //console.log("[agda-extension] replacing full filename \"" + long_fname + "\", with: \"" + fname + "\"");
 
                 var re1 = new RegExp(escape(long_fname), "g");
                 new_output = new_output.replace(re1, fname);
@@ -345,8 +382,40 @@ define([
 
     };
 
+    var shell_reply_handler = function (evt, data) {
+
+        //console.log("shell_reply_handler evt:" + evt + ", data: " + data);
+        var kernel = data.kernel;
+        var reply = data.reply
+        var content = reply.content;
+
+        if (content){
+
+            //console.log("shell_reply_handler content:" + content);
+            var user_expressions = content.user_expressions;
+
+            if (user_expressions) {
+
+                //console.log("shell_reply_handler user_expressions:" + user_expressions);
+                var fileName = user_expressions["fileName"];
+
+                if (fileName) {
+
+                    //console.log("shell_reply_handler fileName:" + fileName);
+
+                    var index = IPython.notebook.get_selected_index();
+                    var cell = IPython.notebook.get_cell(index-1); // get cell before the selected one
+                    cell.metadata.fileName = fileName; // save the module file name in the cell metadata
+
+                }
+
+            }
+
+        }
+
+    }
+
     var agda_init = function() {
-        // read configuration, then call toc
         Jupyter.notebook.config.loaded.then(function () {
 
             upgrade_cells();
@@ -384,6 +453,7 @@ define([
             events.on("change.Cell", change_handler);
             events.on('execute.CodeCell', execute_handler);
             events.on('execute.MarkdownCell', execute_handler);
+            events.on('shell_reply.Kernel', shell_reply_handler);
 
         });
 
