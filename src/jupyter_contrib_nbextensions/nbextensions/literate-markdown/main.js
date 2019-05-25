@@ -38,9 +38,9 @@ define([
     CodeMirror,
     cmpython,
     cmip
-    ) {
+) {
     "use strict";
-    
+
     var Cell = cell.Cell;
     var CodeCell = codecell.CodeCell;
     var TextCell = textcell.TextCell;
@@ -54,9 +54,9 @@ define([
     var original_toJSON = original_prototype.toJSON;
 
     var options_default = {
-        cm_config : {
+        cm_config: {
             extraKeys: {
-                "Backspace" : "delSpaceToPrevTabStop",
+                "Backspace": "delSpaceToPrevTabStop",
             },
             // mode: 'ipythongfm',
             // mode: 'htmlmixed',
@@ -64,21 +64,23 @@ define([
             //theme: 'ipython',
             matchBrackets: true,
             autoCloseBrackets: true,
-            lineWrapping : true,
-            lineNumbers : true
+            lineWrapping: true,
+            lineNumbers: true
         },
-        highlight_modes : {
-            'magic_javascript'    :{'reg':['^%%javascript']},
-            'magic_perl'          :{'reg':['^%%perl']},
-            'magic_ruby'          :{'reg':['^%%ruby']},
-            'magic_python'        :{'reg':['^%%python3?']},
-            'magic_shell'         :{'reg':['^%%bash']},
-            'magic_r'             :{'reg':['^%%R']},
-            'magic_text/x-cython' :{'reg':['^%%cython']}
+        highlight_modes: {
+            'magic_javascript': { 'reg': ['^%%javascript'] },
+            'magic_perl': { 'reg': ['^%%perl'] },
+            'magic_ruby': { 'reg': ['^%%ruby'] },
+            'magic_python': { 'reg': ['^%%python3?'] },
+            'magic_shell': { 'reg': ['^%%bash'] },
+            'magic_r': { 'reg': ['^%%R'] },
+            'magic_text/x-cython': { 'reg': ['^%%cython'] }
         }
     };
 
-    var myMarkdownCell = function (kernel, options) {
+    CodeMirror.defaults = options_default.cm_config;
+
+    var myMarkdownCell = function(kernel, options) {
 
         //console.log("[literate-markdown] creating new MarkdownCell");
 
@@ -118,8 +120,8 @@ define([
     MarkdownCell.prototype.insert_inline_image_from_blob = original_prototype.insert_inline_image_from_blob;
     MarkdownCell.prototype.bind_events = original_prototype.bind_events;
 
-    MarkdownCell.prototype.create_element = function () {
-    
+    MarkdownCell.prototype.create_element = function() {
+
         /*
         CodeCell.prototype.create_element.apply(this, arguments);
         var cell = this.element;
@@ -128,8 +130,8 @@ define([
         Cell.prototype.create_element.apply(this, arguments);
         var that = this;
 
-        var cell =  $('<div></div>').addClass('cell code_cell literate_cell');
-        cell.attr('tabindex','2');
+        var cell = $('<div></div>').addClass('cell code_cell literate_cell');
+        cell.attr('tabindex', '2');
 
         var input = $('<div></div>').addClass('input');
         this.input = input;
@@ -139,38 +141,40 @@ define([
         var run_this_cell = $('<div></div>').addClass('run_this_cell');
         run_this_cell.prop('title', 'Run this cell');
         run_this_cell.append('<i class="fa-step-forward fa"></i>');
-        run_this_cell.click(function (event) {
+        run_this_cell.click(function(event) {
             event.stopImmediatePropagation();
             that.execute();
         });
+        //run_this_cell.prop('hidden', true);
 
         var prompt = $('<div/>').addClass('prompt input_prompt literate_prompt');
 
         var inner_cell = $('<div/>').addClass('inner_cell');
         this.celltoolbar = new celltoolbar.CellToolbar({
-            cell: this, 
-            notebook: this.notebook});
+            cell: this,
+            notebook: this.notebook
+        });
         inner_cell.append(this.celltoolbar.element);
         var input_area = $('<div/>').addClass('input_area');
         this.code_mirror = new CodeMirror(input_area.get(0), options_default.cm_config);
         // In case of bugs that put the keyboard manager into an inconsistent state,
         // ensure KM is enabled when CodeMirror is focused:
-        this.code_mirror.on('focus', function () {
+        this.code_mirror.on('focus', function() {
             if (that.keyboard_manager) {
                 that.keyboard_manager.enable();
             }
 
             that.code_mirror.setOption('readOnly', !that.is_editable());
         });
-        this.code_mirror.on('keydown', $.proxy(this.handle_keyevent,this));
+        this.code_mirror.on('keydown', $.proxy(this.handle_keyevent, this));
         $(this.code_mirror.getInputField()).attr("spellcheck", "true");
         inner_cell.append(input_area);
 
         // NEW
-        var render_area = $('<div/>').addClass('text_cell_render rendered_html').attr('tabindex','-1');
+        var render_area = $('<div/>').addClass('text_cell_render rendered_html').attr('tabindex', '-1');
         inner_cell.append(render_area);
 
-        prompt_container.append(prompt).append(run_this_cell);
+        prompt_container.append(prompt); //.append(run_this_cell);
         input.append(prompt_container).append(inner_cell);
 
         var output = $('<div></div>');
@@ -188,23 +192,24 @@ define([
         //var inner_cell = cell.find('div.inner_cell');
 
         this.inner_cell = inner_cell;
+        this.input_area = input_area;
 
-       //original_prototype.create_element.apply(this, arguments);
+        //original_prototype.create_element.apply(this, arguments);
 
-       /* How to set this up in code?
-        .code_cell.rendered .input_area {
-            display: none;
-        }
+        /* How to set this up in code?
+         .code_cell.rendered .input_area {
+             display: none;
+         }
 
-        .code_cell.unrendered .text_cell_render {
-            display: none;
-        }
-        */
+         .code_cell.unrendered .text_cell_render {
+             display: none;
+         }
+         */
 
     };
 
-    MarkdownCell.prototype.set_input_prompt = function (number) {
-        
+    MarkdownCell.prototype.set_input_prompt = function(number) {
+
         /*var nline = 1;
         if (this.code_mirror !== undefined) {
            nline = this.code_mirror.lineCount();
@@ -216,10 +221,10 @@ define([
         this.element.find('div.input_prompt').html(prompt_html);
         this.events.trigger('set_dirty.Notebook', {value: true});
         */
-       
+
     };
 
-    MarkdownCell.prototype.execute = function (stop_on_error) {
+    MarkdownCell.prototype.execute = function(stop_on_error) {
 
         var orig_text = this.get_text();
         var text = orig_text.replace(/^````.*$/, "````");
@@ -237,11 +242,11 @@ define([
             // ***of the same length as the replaced line***
             // (this is important to preserve character counts when interfacing with the kernel);
             // this helps the kernel giving error messages with the correct line numbers
-            if (i % 2 == 0) { 
+            if (i % 2 == 0) {
                 var lines = blocks[i].split('\n');
                 for (var j = 0; j < lines.length - 1; j++) {
                     //if(lines[j].length > 0)
-                    code += " ".repeat(lines[j].length) +  "\n";
+                    code += " ".repeat(lines[j].length) + "\n";
                 }
                 code += "    "; // for "````"
             }
@@ -264,7 +269,7 @@ define([
 
     };
 
-    MarkdownCell.prototype.render = function () {
+    MarkdownCell.prototype.render = function() {
 
         var text = this.get_text();
         var blocks = text.split('````');
@@ -276,7 +281,7 @@ define([
 
             var kernel = this.kernel.name;
             //console.log("[literate-markdown] current kernel: " + kernel);
-    
+
             for (var i = 0; i < blocks.length; i++) {
                 code += blocks[i];
                 i++;
@@ -286,8 +291,7 @@ define([
                     code += '```';
                 }
             }
-        }
-        else
+        } else
             code = text;
 
         this.unrender();
@@ -296,10 +300,10 @@ define([
         this.code_mirror.setValue(text);
         //this.rendered = true;
         return cont;
-        
+
     };
 
-    MarkdownCell.prototype.fromJSON = function (data) {
+    MarkdownCell.prototype.fromJSON = function(data) {
 
         //console.log("[literate-markdown] called fromJSON");
 
@@ -332,10 +336,11 @@ define([
             //if (data.outputs !== undefined) {
             //    this.output_area.fromJSON(data.outputs, data.metadata);
             //}
+
         }
     };
 
-    MarkdownCell.prototype.toJSON = function () {
+    MarkdownCell.prototype.toJSON = function() {
         var data = original_toJSON.apply(this);
 
         /* ignore for now
@@ -366,7 +371,7 @@ define([
         return data;
     };
 
-    Notebook.prototype.insert_cell_at_index = function(type, index){
+    Notebook.prototype.insert_cell_at_index = function(type, index) {
 
         //console.log("[literate-markdown] inserting a new cell of type: ", type);
 
@@ -377,7 +382,7 @@ define([
         type = type || this.class_config.get_sync('default_cell_type');
         if (type === 'above') {
             if (index > 0) {
-                type = this.get_cell(index-1).cell_type;
+                type = this.get_cell(index - 1).cell_type;
             } else {
                 type = 'code';
             }
@@ -393,31 +398,31 @@ define([
 
         if (ncells === 0 || this.is_valid_cell_index(index) || index === ncells) {
             var cell_options = {
-                events: this.events, 
-                config: this.config, 
-                keyboard_manager: this.keyboard_manager, 
+                events: this.events,
+                config: this.config,
+                keyboard_manager: this.keyboard_manager,
                 notebook: this,
                 tooltip: this.tooltip
             };
-            switch(type) {
-            case 'code':
-                cell = new codecell.CodeCell(this.kernel, cell_options);
-                cell.set_input_prompt();
-                break;
-            case 'markdown':
-                cell = new myMarkdownCell(this.kernel, cell_options); // only change: added this.kernel as first argument
-                break;
-            case 'raw':
-                cell = new textcell.RawCell(cell_options);
-                break;
-            default:
-                console.log("Unrecognized cell type: ", type, cellmod);
-                cell = new cellmod.UnrecognizedCell(cell_options);
+            switch (type) {
+                case 'code':
+                    cell = new codecell.CodeCell(this.kernel, cell_options);
+                    cell.set_input_prompt();
+                    break;
+                case 'markdown':
+                    cell = new myMarkdownCell(this.kernel, cell_options); // only change: added this.kernel as first argument
+                    break;
+                case 'raw':
+                    cell = new textcell.RawCell(cell_options);
+                    break;
+                default:
+                    console.log("Unrecognized cell type: ", type, cellmod);
+                    cell = new cellmod.UnrecognizedCell(cell_options);
             }
 
-            if(this._insert_element_at_index(cell.element,index)) {
+            if (this._insert_element_at_index(cell.element, index)) {
                 cell.render();
-                this.events.trigger('create.Cell', {'cell': cell, 'index': index});
+                this.events.trigger('create.Cell', { 'cell': cell, 'index': index });
                 cell.refresh();
                 // We used to select the cell after we refresh it, but there
                 // are now cases were this method is called where select is
@@ -430,12 +435,12 @@ define([
 
     };
 
-    Notebook.prototype.to_code = function (index) {
+    Notebook.prototype.to_code = function(index) {
         var i = this.index_or_selected(index);
         if (this.is_valid_cell_index(i)) {
             var source_cell = this.get_cell(i);
-            if (/*!(source_cell instanceof codecell.CodeCell)*/ source_cell.cell_type !== "code" && source_cell.is_editable()) { // only change
-                var target_cell = this.insert_cell_below('code',i);
+            if ( /*!(source_cell instanceof codecell.CodeCell)*/ source_cell.cell_type !== "code" && source_cell.is_editable()) { // only change
+                var target_cell = this.insert_cell_below('code', i);
                 var text = source_cell.get_text();
                 if (text === source_cell.placeholder) {
                     text = '';
@@ -474,10 +479,12 @@ define([
             //render_cell(new_cell);
             new_cell.execute();
 
-        }
-        else {
+        } else {
             cell.execute();
         }
+
+        var cm = cell.code_mirror;
+        cm.setOption("lineWrapping", true);
 
     }
 
@@ -497,7 +504,7 @@ define([
      * Update all references variables in markdown cells
      *
      */
-    var update_md_cells = function () {
+    var update_md_cells = function() {
         var ncells = Jupyter.notebook.ncells();
         var cells = Jupyter.notebook.get_cells();
 
@@ -518,8 +525,8 @@ define([
 
 
             //var text = cell.element.getElementById('text');
-//                text.classList.remove('hidden');
-//                text.classList.add('show');
+            //                text.classList.remove('hidden');
+            //                text.classList.add('show');
 
             upgrade_cell(cell, i);
         }
@@ -529,7 +536,7 @@ define([
 
     var literate_init = function() {
         // read configuration, then call toc
-        Jupyter.notebook.config.loaded.then(function () {
+        Jupyter.notebook.config.loaded.then(function() {
 
             update_md_cells();
 
@@ -541,7 +548,7 @@ define([
 
         // event: on cell selection, highlight the corresponding item
         //events.on('select.Cell', highlight_toc_item);
-            // event: if kernel_ready (kernel change/restart): add/remove a menu item
+        // event: if kernel_ready (kernel change/restart): add/remove a menu item
         //events.on("kernel_ready.Kernel", function() { })
         // events.on('execute.CodeCell', highlight_toc_item);
     }
@@ -566,21 +573,21 @@ define([
 
         /* Show values stored in metadata on reload */
 
-        events.on("kernel_ready.Kernel", function () {
+        events.on("kernel_ready.Kernel", function() {
             if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
                 console.log("[literate-markdown] Notebook fully loaded --  literate-markdown initialized");
                 literate_init();
             } else {
-                events.on("notebook_loaded.Notebook", function () {
-                console.log("[literate-markdown] literate-markdown initialized (via notebook_loaded)");
-                literate_init();
+                events.on("notebook_loaded.Notebook", function() {
+                    console.log("[literate-markdown] literate-markdown initialized (via notebook_loaded)");
+                    literate_init();
                 })
             }
-        })       
+        })
     };
 
     return {
-        load_ipython_extension : load_ipython_extension
+        load_ipython_extension: load_ipython_extension
     };
 
 });

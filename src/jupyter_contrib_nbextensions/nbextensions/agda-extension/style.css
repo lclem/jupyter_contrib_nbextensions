@@ -1,0 +1,204 @@
+div.input {
+    border-left: 5px solid #ffffff !important;
+    background: #ffffff !important;
+}
+
+div.input_area {
+    padding-right: 0em !important;
+    margin-left: 13px;
+    margin-right: 8px;
+    /*margin: 8px !important;*/
+    /*background: #ffffff !important;*/
+    /*border: 5px solid #ffffff !important;*/
+    border: 1px solid #ebebebeb;
+    border-radius: 3px !important;
+}
+
+div.output_subarea {
+    padding: 10px !important;
+}
+
+.language-agda {}
+
+div.prompt,
+.prompt {
+    min-width: 0ex !important;
+    width: 0ex !important;
+    padding: 0ex !important;
+}
+
+div.prompt_container {
+    display: inline;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: right;
+}
+
+.prompt_container.style {
+    visibility: hidden;
+}
+
+.compile-error {
+    background: rgb(255, 150, 150) !important;
+}
+
+.compile-ok {
+    background: rgb(225, 255, 225) !important;
+    border-radius: 3px;
+}
+
+.compile-ok-border {
+    border: 1px solid #cde9cc !important;
+}
+
+.compile-holes {
+    background: rgb(255, 255, 225) !important;
+}
+
+.CodeMirror-lines {
+    padding-bottom: .9em;
+    padding-left: 10px;
+    /*0.5em;*/
+    padding-right: 1.5em;
+    padding-top: .7em;
+    /*margin-left: 5px;*/
+    /* background: rgb(225, 255, 225); mmm can't be always green */
+}
+
+.CodeMirror-linenumbers {
+    width: 41px !important;
+}
+
+.CodeMirror-gutters {
+    width: 41px !important;
+}
+
+.CodeMirror-scroll {
+    margin-right: -50px;
+    margin-top: -10px;
+}
+
+div.text_cell_render code {
+    font-size: 10pt !important;
+    border: none !important;
+    padding: 0px;
+    margin: 0px;
+}
+
+div .text_cell_render {
+    padding: 0.4em 0.4em 0.4em 12px;
+}
+
+div.text_cell_render pre {
+    border: 1px solid #cde9cc !important;
+    border-radius: 3px;
+    padding: 8px 0px 8px 12px;
+    margin: 1px;
+    max-width: 100%;
+}
+
+div.text_cell_render pre,
+div.text_cell_render code {
+    color: #353535;
+    background: #e1ffe0;
+    font-family: monospace, monospace;
+    font-size: 10pt !important;
+    /*line-height: 170% !important;*/
+}
+
+pre {
+    font-size: 10pt !important;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 0px;
+    margin-right: 1px;
+    /*padding: 12px !important;*/
+}
+
+.rendered_html pre {
+    margin: 0px !important;
+}
+
+div.cell {
+    background: #ffffff !important;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.CodeMirror {
+    padding-top: 5px;
+}
+
+
+/* the following disables the selection highlighter on the left of the cells */
+
+.edit_mode div.cell.selected:before,
+div.cell.selected:before,
+div.cell.selected.jupyter-soft-selected:before {
+    width: 0px !important;
+    border-left: 5px solid #B6B4D7 !important;
+    border-radius: 3px !important;
+    margin-top: 0px !important;
+    margin-bottom: 10px !important;
+    /*top: -10px !important;*/
+}
+
+div.cell:before {
+    width: 0px !important;
+    border-left: 5px solid #ffffff !important;
+    margin-top: 0px !important;
+    margin-bottom: 10px !important;
+    /*top: -10px !important;*/
+}
+
+.edit_mode div.cell.code_cell.selected .input,
+div.cell.code_cell.selected .input,
+div.cell.code_cell .input {
+    border-left: 5px solid #ffffff !important;
+    border-radius: 3px !important;
+}
+
+
+/*div.cell.selected:after,
+div.cell.selected.jupyter-soft-selected:after {
+    width: 0px;
+    border-left: 6px solid #B6B4D7 !important;
+}*/
+
+.out_prompt_overlay.prompt {
+    border: 0px none !important;
+    border-radius: 0px !important;
+    visibility: hidden;
+}
+
+div.output_wrapper {
+    background-color: #ffffff;
+    border: 0px;
+    left: 0px;
+    margin-bottom: 0em;
+    margin-top: 0em;
+    border-top-right-radius: 0px;
+    border-top-left-radius: 0px;
+    margin-left: 10px;
+}
+
+div.run_this_cell {
+    visibility: visible;
+    display: flex;
+    cursor: pointer;
+    color: #333;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-top: 0px;
+    margin-left: 5px;
+    width: 2ex;
+    background: transparent;
+    background-color: transparent;
+}
+
+.run_this_cell:hover {
+    visibility: visible;
+    background: #ffffff !important;
+    color: #ff7823 !important;
+}
