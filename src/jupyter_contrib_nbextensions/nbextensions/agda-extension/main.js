@@ -155,18 +155,10 @@ define([
 
     CodeCell.input_prompt_function = agda_input_prompt;
 
+    /*
     var make_cell_yellow = function(cell) {
 
         var cm = cell.code_mirror;
-
-        /*
-        var mark_yellow = function(lineHandle) {
-            cm.addLineClass(lineHandle, "background", "compile-holes");
-        };
-
-        cm.eachLine(mark_yellow);
-        */
-
         var cm_lines = cm.getWrapperElement().getElementsByClassName('CodeMirror-lines');
         cm_lines[0].classList.add("compile-holes");
 
@@ -175,19 +167,11 @@ define([
     var unmake_cell_yellow = function(cell) {
 
         var cm = cell.code_mirror;
-
-        /*
-        var unmark_yellow = function(lineHandle) {
-            cm.removeLineClass(lineHandle, "background", "compile-holes");
-        };
-
-        cm.eachLine(unmark_yellow);
-        */
-
         var cm_lines = cm.getWrapperElement().getElementsByClassName('CodeMirror-lines');
         cm_lines[0].classList.remove("compile-holes");
 
     }
+    */
 
     var make_cell_green = function(cell) {
 
@@ -280,11 +264,18 @@ define([
             //unmake_cell_yellow(cell);
             make_cell_green(cell);
             return ""; // no output on successful compilation
-        } else if (output.match(/^\?0/)) { // (^(\*All Goals\*/|\?0)/))) {
-            console.log("[agda-extension] make cell yellow");
-            make_cell_yellow(cell); // there are open goals, make cell yellow
-            return output;
-        } else if (output.match(/^\*Error\*|\*All Errors\*|\*All Warnings\*|\*All Goals, Errors\*/)) { // if there is an error
+        }
+
+        //if ( /*output.match(/^\?0/) && */ cell.metadata.holes) { // (^(\*All Goals\*/|\?0)/))) {
+        //console.log("[agda-extension] make cell yellow");
+        //make_cell_yellow(cell); // there are open goals, make cell yellow
+
+        // add markes for lines with holes
+
+        //return output;
+        //}
+
+        if (output.match(/^\*Error\*|\*All Errors\*|\*All Warnings\*|\*All Goals, Errors\*/)) { // if there is an error
 
             if (cell.cell_type == "markdown") {
                 //console.log("[agda-extension] process_new_output, unrendering cell");
@@ -340,11 +331,9 @@ define([
         if (outputs !== undefined && outputs[0] !== undefined) {
 
             var output = outputs[0].text;
-            console.log("[agda-extension] finished_execute_handler, original output: " + output);
-
             var new_output = process_new_output(cell, output);
 
-            console.log("[agda-extension] finished_execute_handler, new_output: " + new_output);
+            console.log("[agda-extension] finished_execute_handler, original output: " + output + ", new output: " + new_output);
 
             outputs[0].text = new_output;
             cell.clear_output(false, true);
@@ -352,32 +341,32 @@ define([
         }
     };
 
-    var remove_error_highlight = function(cell) {
+    var remove_all_highlights = function(cell) {
 
         var cm = cell.code_mirror;
-        //var len = cm.lineCount();
-
-        var remove_background = function(lineHandle) {
-            // console.log("[agda-extension] removing highlighting from line " + lineHandle);
+        cm.eachLine(function(lineHandle) {
             cm.removeLineClass(lineHandle, "background", "compile-error");
-        };
-
-        cm.eachLine(remove_background);
+            cm.removeLineClass(lineHandle, "background", "compile-hole");
+        });
         cell.metadata.codehighlighter = [];
-
+        cell.metadata.code_hole_highlighter = [];
     };
 
     var execute_handler = function(evt, data) {
+
+        console.log("[agda-extension] execute_handler");
 
         // retrieve the contents of the output area
         var cell = data.cell;
         cell.output_area.collapse();
         cell.output_area.do_not_expand = true;
-        remove_error_highlight(cell);
+        remove_all_highlights(cell);
 
     };
 
     var change_handler = function(evt, data) {
+
+        console.log("[agda-extension] change_handler");
 
         var cell = data.cell;
         var change = data.change;
@@ -385,8 +374,8 @@ define([
         if (change) {
 
             unmake_cell_green(cell);
-            unmake_cell_yellow(cell);
-            remove_error_highlight(cell);
+            //unmake_cell_yellow(cell);
+            remove_all_highlights(cell);
 
         }
 
@@ -394,10 +383,22 @@ define([
 
     var shell_reply_handler = function(evt, data) {
 
-        //console.log("shell_reply_handler evt:" + evt + ", data: " + data);
+        //console.log("shell_reply_handler evt:" + (evt) + ", data: " + (data));
         var kernel = data.kernel; //TODO: check that the kernel is Agda
         var reply = data.reply
         var content = reply.content;
+
+        //console.log("shell_reply_handler reply.msg_id: " + reply.msg_id)
+        //console.log("shell_reply_handler reply.parent_header.msg_id: " + reply.parent_header.msg_id)
+        //console.log("shell_reply_handler CodeCell.msg_cells: " + CodeCell.msg_cells)
+
+        //var index = IPython.notebook.get_selected_index();
+        var cell = CodeCell.msg_cells[reply.parent_header.msg_id];
+
+        // the current cell is the one before the selected one (not always!!)
+        //var cell = IPython.notebook.get_cell(index - 1); 
+
+        console.log("shell_reply_handler cell: " + cell)
 
         if (content) {
 
@@ -412,10 +413,24 @@ define([
                 if (fileName) {
 
                     //console.log("shell_reply_handler fileName:" + fileName);
-
-                    var index = IPython.notebook.get_selected_index();
-                    var cell = IPython.notebook.get_cell(index - 1); // get cell before the selected one
                     cell.metadata.fileName = fileName; // save the module file name in the cell metadata
+
+                }
+
+                var holes = user_expressions["holes"];
+
+                if (holes) {
+
+                    console.log("shell_reply_handler holes: " + holes);
+                    cell.metadata.holes = holes;
+
+                    for (const hole of cell.metadata.holes) {
+
+                        console.log("process_new_output hole: " + hole);
+                        highlight_hole_in_cell_and_store_in_metadata(cell, hole);
+
+                    }
+
 
                 }
 
@@ -499,11 +514,34 @@ define([
         }
     }
 
+    var highlight_hole_in_cell_and_store_in_metadata = function(cell, lineno) {
+
+        if (!cell.metadata.code_hole_highlighter)
+            cell.metadata.code_hole_highlighter = [];
+
+        // save the highlighting information in the metadata
+        cell.metadata.code_hole_highlighter.push(lineno);
+        highlight_hole_in_cell(cell, lineno);
+    };
+
+    var highlight_hole_in_cell = function(cell, where) {
+
+        var cm = cell.code_mirror;
+        cm.addLineClass(where, "background", "compile-hole");
+
+    }
+
     var highlight_from_metadata = function() {
         Jupyter.notebook.get_cells().forEach(function(cell) {
             if (cell.metadata.codehighlighter) {
                 cell.metadata.codehighlighter.forEach(function(range) {
                     highlight_error_in_cell(cell, range[0], range[1]);
+                });
+            }
+
+            if (cell.metadata.code_hole_highlighter) {
+                cell.metadata.code_hole_highlighter.forEach(function(lineno) {
+                    highlight_hole_in_cell(cell, lineno);
                 });
             }
         });

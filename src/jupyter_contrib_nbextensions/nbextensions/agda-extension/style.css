@@ -52,7 +52,7 @@ div.prompt_container {
     border: 1px solid #cde9cc !important;
 }
 
-.compile-holes {
+.compile-hole {
     background: rgb(255, 255, 225) !important;
 }
 
@@ -201,4 +201,23 @@ div.run_this_cell {
     visibility: visible;
     background: #ffffff !important;
     color: #ff7823 !important;
+}
+
+div#pager .ui-resizable-handle {
+    top: 0px !important;
+    height: 0px !important;
+    background: #f7f7f7 !important;
+    /* background: #ff7823 !important; */
+    /* border-top: 1px solid #ff7823; */
+    /* border-bottom: 1px solid #ff7823; */
+}
+
+.completions {
+    border: 0px solid #ccc;
+    background: #ededed;
+    box-shadow: aquamarine;
+    padding: 5px;
+    /*border: 1px solid #ababab;*/
+    border-radius: 2px;
+    box-shadow: 10px 5px 15px 0px #adadad;
 }
