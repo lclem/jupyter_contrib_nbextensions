@@ -98,13 +98,34 @@ div.text_cell_render pre {
     max-width: 100%;
 }
 
-div.text_cell_render pre,
-div.text_cell_render code {
-    color: #353535;
+.language-agda {
     background: #e1ffe0;
+}
+
+
+/* all pre areas are rendered with green background */
+
+div.text_cell_render pre {
+    /*div.text_cell_render code {*/
+    color: #353535;
+    background: #e1ffe0 !important;
     font-family: monospace, monospace;
     font-size: 10pt !important;
     /*line-height: 170% !important;*/
+}
+
+
+/* code in agda language is rendered with green background */
+
+code.language-agda {
+    background: #e1ffe0 !important;
+}
+
+
+/* code in non-agda language is rendered with grey background */
+
+div.text_cell_render code {
+    background: #ededed;
 }
 
 pre {
