@@ -91,24 +91,14 @@ div .text_cell_render {
 }
 
 div.text_cell_render pre {
-    border: 1px solid #cde9cc !important;
+    color: #353535;
+    background: #ededed;
+    border: 1px solid #ededed !important;
+    /* !important;*/
     border-radius: 3px;
     padding: 8px 0px 8px 12px;
     margin: 1px;
     max-width: 100%;
-}
-
-.language-agda {
-    background: #e1ffe0;
-}
-
-
-/* all pre areas are rendered with green background */
-
-div.text_cell_render pre {
-    /*div.text_cell_render code {*/
-    color: #353535;
-    background: #e1ffe0 !important;
     font-family: monospace, monospace;
     font-size: 10pt !important;
     /*line-height: 170% !important;*/
@@ -117,8 +107,9 @@ div.text_cell_render pre {
 
 /* code in agda language is rendered with green background */
 
-code.language-agda {
+.language-agda {
     background: #e1ffe0 !important;
+    border: 1px solid #cde9cc !important;
 }
 
 
@@ -134,6 +125,7 @@ pre {
     margin-bottom: 10px;
     margin-left: 0px;
     margin-right: 1px;
+    background: #dedede;
     /*padding: 12px !important;*/
 }
 

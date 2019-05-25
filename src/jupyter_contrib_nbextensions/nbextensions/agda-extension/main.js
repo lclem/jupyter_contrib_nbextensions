@@ -478,11 +478,24 @@ define([
             events.on("change.Cell", change_handler);
             events.on('execute.CodeCell', execute_handler);
             events.on('execute.MarkdownCell', execute_handler);
+            events.on("rendered.MarkdownCell", rendered_handler);
             events.on('shell_reply.Kernel', shell_reply_handler);
 
         });
 
     }
+
+    var rendered_handler = function(evt, data) {
+
+        // add the class "language-agda" to all pre elements of this cell that contain an element "code.language-agda"
+        console.log("[agda-extension] rendered_handler");
+        var cell = data.cell;
+        cell.element.find('div.text_cell_render pre').each(function(index, value) {
+            console.log($(this));
+            $(this).has("code.language-agda").addClass("language-agda");
+        });
+    };
+
 
     var load_css = function() {
         var link = document.createElement("link");
