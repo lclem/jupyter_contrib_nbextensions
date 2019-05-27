@@ -53,6 +53,39 @@ define([
     var original_fromJSON = original_prototype.fromJSON;
     var original_toJSON = original_prototype.toJSON;
 
+    //var original_execute_cell_and_select_below = Notebook.prototype.execute_cell_and_select_below;
+
+    Notebook.prototype.execute_cell_and_select_below = function() {
+        var indices = this.get_selected_cells_indices();
+        var cell_index;
+        if (indices.length > 1) {
+            this.execute_cells(indices);
+            cell_index = Math.max.apply(Math, indices);
+        } else {
+            var cell = this.get_selected_cell();
+            cell_index = this.find_cell_index(cell);
+            cell.execute();
+        }
+
+        /*
+        // If we are at the end always insert a new cell and return
+        if (cell_index === (this.ncells()-1)) {
+            this.command_mode();
+            this.insert_cell_below();
+            this.select(cell_index+1);
+            this.edit_mode();
+            this.scroll_to_bottom();
+            this.set_dirty(true);
+            return;
+        }
+
+        this.command_mode();
+        this.select(cell_index+1);
+        this.focus_cell();
+        this.set_dirty(true);
+        */
+    };
+
     var options_default = {
         cm_config: {
             extraKeys: {
