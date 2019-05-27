@@ -53,7 +53,8 @@ div.prompt_container {
 }
 
 .compile-hole {
-    background: rgb(255, 255, 225) !important;
+    background: rgb(255, 255, 225);
+    /* !important; */
 }
 
 .CodeMirror-lines {
@@ -79,11 +80,28 @@ div.prompt_container {
     margin-top: -10px;
 }
 
+code.language-agda {
+    padding: 0px !important;
+}
+
+
+/* code in non-agda language is rendered with grey background */
+
 div.text_cell_render code {
+    background: #ededed;
     font-size: 10pt !important;
     border: none !important;
-    padding: 0px;
     margin: 0px;
+    padding: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 4px;
+}
+
+div.text_cell_render {
+    font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 12pt !important;
+    padding: 0.4em 0.4em 0em 12px !important;
 }
 
 div .text_cell_render {
@@ -91,9 +109,10 @@ div .text_cell_render {
 }
 
 div.text_cell_render pre {
+    border-left: 1px solid #cde9cc !important;
     color: #353535;
     background: #ededed;
-    border: 1px solid #ededed !important;
+    border: 1px solid #ededed;
     /* !important;*/
     border-radius: 3px;
     padding: 8px 0px 8px 12px;
@@ -110,13 +129,13 @@ div.text_cell_render pre {
 .language-agda {
     background: #e1ffe0 !important;
     border: 1px solid #cde9cc !important;
+    border-left: 1px solid #cde9cc !important;
 }
 
-
-/* code in non-agda language is rendered with grey background */
-
-div.text_cell_render code {
-    background: #ededed;
+pre.language-agda {
+    background: #e1ffe0 !important;
+    border: 1px solid #cde9cc !important;
+    border-left: 1px solid #cde9cc !important;
 }
 
 pre {
@@ -131,6 +150,8 @@ pre {
 
 .rendered_html pre {
     margin: 0px !important;
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
 }
 
 div.cell {
@@ -220,9 +241,10 @@ div#pager .ui-resizable-handle {
     top: 0px !important;
     height: 0px !important;
     background: #f7f7f7 !important;
-    /* background: #ff7823 !important; */
-    /* border-top: 1px solid #ff7823; */
-    /* border-bottom: 1px solid #ff7823; */
+    top: 0px;
+    height: 8px;
+    border-top: 1px transparent;
+    border-bottom: 1px transparent;
 }
 
 .completions {
@@ -233,4 +255,78 @@ div#pager .ui-resizable-handle {
     /*border: 1px solid #ababab;*/
     border-radius: 2px;
     box-shadow: 10px 5px 15px 0px #adadad;
+}
+
+.cell-tag {
+    color: #303030;
+    background-color: #ededed !important;
+    background-image: none;
+    border: 1px transparent !important;
+    border-radius: 3px;
+    box-shadow: none;
+    width: inherit;
+    font-size: inherit;
+    height: 22px;
+    line-height: 22px;
+    white-space: nowrap;
+    padding: 0px 10px;
+}
+
+.rendered_html h1:first-child,
+.rendered_html h2:first-child,
+.rendered_html h3:first-child,
+.rendered_html h4:first-child,
+.rendered_html h5:first-child,
+.rendered_html h6:first-child {
+    margin-top: 0.2em !important;
+    margin-bottom: 0.8em !important;
+}
+
+div.rendered_html h1 {
+    margin: 1em 0em 1em 0em !important;
+}
+
+div.rendered_html h2 {
+    margin: 1em 0em 1em 0em !important;
+}
+
+div.rendered_html h3 {
+    margin: 1em 0em 1em 0em !important;
+}
+
+.dropdown-menu>li>a {
+    padding: 5px 18px 5px 10px !important;
+    font-size: 11pt;
+}
+
+.navbar-default .navbar-nav>li>a {
+    font-family: sans-serif;
+    font-size: 11pt;
+    color: #303030;
+    display: block;
+    line-height: 1.5em;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+select.form-control.select-xs {
+    height: 22px;
+    font-size: 11pt;
+}
+
+div#maintoolbar {
+    margin-left: 6px !important;
+    position: inherit !important;
+    width: 100;
+    /* margin-left: -10%; */
+    /* padding-right: 8%; */
+    float: left;
+    background: transparent !important;
+}
+
+
+/* it seems the toc2 hide button is not working */
+
+.sidebar-wrapper .hide-btn {
+    display: -webkit-inline-box !important;
 }

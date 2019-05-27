@@ -275,7 +275,7 @@ define([
         //return output;
         //}
 
-        if (output.match(/^\*Error\*|\*All Errors\*|\*All Warnings\*|\*All Goals, Errors\*/)) { // if there is an error
+        if (output.match(/^\*Error\*|\*All Errors\*|\*All Warnings\*|\*All Goals, Errors\*|\*All Errors, Warnings\*|\*All Goals, Errors, Warnings\*|\*All Goals, Warnings\*/)) { // if there is an error
 
             if (cell.cell_type == "markdown") {
                 //console.log("[agda-extension] process_new_output, unrendering cell");
@@ -576,20 +576,6 @@ define([
         }).catch(function(reason) {
             console.error(log_prefix, 'unhandled error:', reason);
         });
-
-        /*
-        events.on("kernel_ready.Kernel", function () {
-            if (Jupyter.notebook !== undefined && Jupyter.notebook._fully_loaded) {
-                console.log("[agda-extension] Notebook fully loaded -- agda-extension initialized");
-                agda_init();
-            } else {
-                events.on("notebook_loaded.Notebook", function () {
-                console.log("[agda-extension] agda-extension initialized (via notebook_loaded)");
-                agda_init();
-                })
-            }
-        })
-        */
     };
 
     return {
