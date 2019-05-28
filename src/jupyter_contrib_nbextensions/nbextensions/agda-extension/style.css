@@ -5,8 +5,8 @@ div.input {
 
 div.input_area {
     padding-right: 0em !important;
-    margin-left: 13px;
-    margin-right: 8px;
+    margin-left: 12px !important;
+    margin-right: 6px !important;
     /*margin: 8px !important;*/
     /*background: #ffffff !important;*/
     /*border: 5px solid #ffffff !important;*/
@@ -17,8 +17,6 @@ div.input_area {
 div.output_subarea {
     padding: 10px !important;
 }
-
-.language-agda {}
 
 div.prompt,
 .prompt {
@@ -57,14 +55,21 @@ div.prompt_container {
     /* !important; */
 }
 
+
+/*
 .CodeMirror-lines {
     padding-bottom: .9em;
     padding-left: 10px;
-    /*0.5em;*/
     padding-right: 1.5em;
     padding-top: .7em;
-    /*margin-left: 5px;*/
-    /* background: rgb(225, 255, 225); mmm can't be always green */
+}
+*/
+
+div.CodeMirror-lines {
+    padding-bottom: 0.5em !important;
+    padding-left: 0 !important;
+    padding-right: 0em !important;
+    padding-top: 0.5em !important;
 }
 
 .CodeMirror-linenumbers {
@@ -76,7 +81,7 @@ div.prompt_container {
 }
 
 .CodeMirror-scroll {
-    margin-right: -50px;
+    margin-right: -36px;
     margin-top: -10px;
 }
 
@@ -169,6 +174,12 @@ div.cell {
 
 .CodeMirror {
     padding-top: 5px;
+}
+
+.CodeMirror pre {
+    padding: 0em !important;
+    padding-right: 15px !important;
+    padding-left: 10px !important;
 }
 
 
