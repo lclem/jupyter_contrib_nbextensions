@@ -292,6 +292,9 @@ define([
 
         //console.log("Extracted executable code chunks: \n" + code);
 
+        // TODO: disable undo while performing these changes
+        // TODO: raise an error if there is an odd number of lines "````"
+
         this.rendered = false;
         MarkdownCell.prototype.set_text.call(this, code);
         CodeCell.prototype.execute.call(this, stop_on_error);

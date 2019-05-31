@@ -56,6 +56,19 @@ div.prompt_container {
 }
 
 
+/*, div.CodeMirror-linenumber, .CodeMirror-gutter.CodeMirror-linenumberdiv.CodeMirror-gutter.CodeMirror-linenumber {
+*/
+
+.CodeMirror-linenumber {
+    padding-right: 0px !important;
+    margin-left: 10px !important;
+    /* margin: 0; */
+    width: 27px !important;
+    padding: 0px !important;
+    text-align: right;
+}
+
+
 /*
 .CodeMirror-lines {
     padding-bottom: .9em;
@@ -126,7 +139,7 @@ div.text_cell_render pre {
     max-width: 100%;
     font-family: monospace, monospace;
     font-size: 10pt !important;
-    /*line-height: 170% !important;*/
+    line-height: 150% !important;
 }
 
 
