@@ -371,8 +371,8 @@ div#maintoolbar {
 
 #agda-pager {
     z-index: 90;
-    display: none;
     position: fixed !important;
+    display: none;
     flex-direction: column;
     overflow: hidden;
     padding: 10px;
@@ -381,11 +381,12 @@ div#maintoolbar {
     background-color: #dedede;
     top: 0;
     bottom: 0;
-    width: 250px;
-    margin-top: 90px;
+    width: 450px;
+    min-width: 250px;
+    margin-top: 75px;
     margin-bottom: 10px;
-    margin-left: 800px;
-    margin-right: 10px;
+    margin-left: 10px;
+    /* margin-right: 10px;  */
 }
 
 .ui-button {
@@ -394,5 +395,5 @@ div#maintoolbar {
     padding-top: 0px !important;
     padding-left: 0px;
     padding-bottom: 5px !important;
-    margin-left: 215px;
+    margin-left: 415px;
 }

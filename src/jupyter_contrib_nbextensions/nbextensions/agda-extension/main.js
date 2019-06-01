@@ -146,7 +146,7 @@ define([
         //this.events.trigger('open_with_text.Pager', this._reply.content);
 
         $('#agda-pager').show();
-        setNotebookWidth();
+        setAgdaNotebookWidth();
 
     }
 
@@ -451,7 +451,7 @@ define([
 
     }
 
-    function setNotebookWidth(cfg, st) {
+    function setAgdaNotebookWidth(cfg, st) {
         var margin = 10;
         var nb_inner = $('#notebook-container');
         var nb_wrap_w = $('#notebook').width();
@@ -459,33 +459,46 @@ define([
         var visible_sidebar = sidebar.is(':visible');
         var sidebar_w = visible_sidebar ? sidebar.outerWidth() : 0;
         var available_space = nb_wrap_w - 2 * margin - sidebar_w;
-        var inner_css = { marginRight: '', marginLeft: '', width: '' };
+        var nb_inner_w = nb_inner.outerWidth();
+        var inner_css = { marginLeft: '', width: '' };
 
+        console.log("[agda-extension] nb_wrap_w: " + nb_wrap_w);
+        console.log("[agda-extension] sidebar_w: " + sidebar_w);
+        console.log("[agda-extension] available_space: " + available_space);
+        console.log("[agda-extension] nb_inner_w: " + nb_inner_w);
         console.log("[agda-extension] visible_sidebar: " + visible_sidebar);
 
         if (visible_sidebar) {
-            var nb_inner_w = nb_inner.outerWidth();
+
             //var nb_left_w = nb_inner.css('padding-left') + nb_inner.css('margin-left') + nb_wrap_w; //nb_inner.width();
             if (available_space <= nb_inner_w + sidebar_w) {
 
-                var marginLeft = nb_inner.outerWidth() + 200 /*- nb_inner.css('margin-left') - nb_inner.css('padding-left')*/ + margin;
-                console.log("[agda-extension] resizing #agda-pager, marginLeft = " + marginLeft);
+                //var marginLeft = nb_inner.outerWidth() + 200 /*- nb_inner.css('margin-left') - nb_inner.css('padding-left')*/ + margin;
+                //var marginRight = nb_inner.outerWidth() + 200 /*- nb_inner.css('margin-left') - nb_inner.css('padding-left')*/ + margin;
+                //console.log("[agda-extension] resizing #agda-pager, marginLeft = " + marginLeft);
 
                 // shift notebook to the left
-                inner_css.marginRight = sidebar_w + margin;
+                // inner_css.marginRight = sidebar_w + margin;
+
+                // shift notebook to the right
+                inner_css.marginLeft = sidebar_w + margin;
+                console.log("[agda-extension] shifting nb to the right, marginLeft: " + inner_css.marginLeft);
+
                 //inner_css.marginLeft = nb_inner_w - inner_css.marginRight - nb_inner.width();
 
-                sidebar.css('margin-left', marginLeft + 'px');
-                sidebar.css('margin-right', '10px');
+                //sidebar.css('margin-left', marginLeft + 'px');
+                //sidebar.css('margin-right', '10px');
 
-                if (available_space <= nb_inner_w) {
-                    // slim notebook if necessary
-                    inner_css.width = available_space;
-                }
+                //if (available_space <= nb_inner_w) {
+                // slim notebook if necessary
+                //    inner_css.width = available_space;
+                //    console.log("[agda-extension] slimming nb, width: " + inner_css.width);
+                //}
             }
         } else {
-
+            inner_css.marginLeft = 'auto'
         }
+
         nb_inner.css(inner_css);
     }
 
@@ -530,7 +543,7 @@ define([
                     .addClass('ui-button')
                     .click(function() {
                         $('#agda-pager').hide();
-                        setNotebookWidth();
+                        setAgdaNotebookWidth();
                     })
                     .append($('<span>').addClass("ui-icon ui-icon-close"))
                 )
@@ -540,13 +553,13 @@ define([
                 .prependTo('#site');
 
             /*agda_pager.resizable({
-                handles: 'all',
+                handles: 'e', // only the east handle is available
                 resize: function(event, ui) {
                     //if (cfg.sideBar) {
                     // unset the height set by jquery resizable
-                    $('#agda-pager').css('height', '');
+                    //$('#agda-pager').css('height', '');
                     $('#agda-pager').css('width', '');
-                    //setNotebookWidth(cfg, st)
+                    //setAgdaNotebookWidth();
                     //}
                 },
                 start: function(event, ui) {
@@ -558,13 +571,15 @@ define([
                 stop: function() {},
                 containment: 'parent',
                 minHeight: 100,
-                minWidth: 165,
+                minWidth: 250,
             });*/
 
-            setNotebookWidth();
+            //agda_pager.children('.ui-resizable-e').toggleClass('ui-icon ui-icon-grip-dotted-vertical', true);
+
+            setAgdaNotebookWidth();
 
             var callbackPageResize = function(evt) {
-                setNotebookWidth();
+                setAgdaNotebookWidth();
             };
 
             $(window).on('resize', callbackPageResize);
