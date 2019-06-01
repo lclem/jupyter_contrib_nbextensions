@@ -159,12 +159,13 @@ pre.language-agda {
 
 pre {
     font-size: 10pt !important;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 0px;
+    margin-bottom: 0px;
     margin-left: 0px;
-    margin-right: 1px;
+    margin-right: 0px;
     background: #dedede;
     /*padding: 12px !important;*/
+    border: 0px solid #e7e7e7 !important;
 }
 
 .rendered_html pre {
@@ -367,3 +368,31 @@ div#maintoolbar {
 ::-webkit-scrollbar {
     max-height: 3px;
 }*/
+
+#agda-pager {
+    z-index: 90;
+    display: none;
+    position: fixed !important;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 10px;
+    border-style: none;
+    border-width: thin;
+    background-color: #dedede;
+    top: 0;
+    bottom: 0;
+    width: 250px;
+    margin-top: 90px;
+    margin-bottom: 10px;
+    margin-left: 800px;
+    margin-right: 10px;
+}
+
+.ui-button {
+    width: 10px;
+    height: 18px;
+    padding-top: 0px !important;
+    padding-left: 0px;
+    padding-bottom: 5px !important;
+    margin-left: 215px;
+}

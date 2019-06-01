@@ -116,26 +116,37 @@ define([
         Jupyter.pager.clear();
         Jupyter.pager.expanded = true;
 
+        // empty the current contents of the agda pager
+        $("#agda-pager-container").empty();
+
         var payload = content;
 
         if (payload.data['text/html'] && payload.data['text/html'] !== "") {
             Jupyter.pager.append(payload.data['text/html']);
+            $("#agda-pager-container").append(payload.data['text/html']);
+
         } else if (payload.data['text/plain'] && payload.data['text/plain'] !== "") {
             Jupyter.pager.append_text(payload.data['text/plain']);
+            $("#agda-pager-container").append(
+                $('<pre/>').html(utils.fixConsole(utils.fixOverwrittenChars(payload.data['text/plain']))));
         }
 
+        /*
         Jupyter.pager.pager_element.height('initial');
         Jupyter.pager.pager_element.show("fast", function() {
             Jupyter.pager.pager_element.height(Jupyter.pager.pager_element.height());
             Jupyter.pager._resize();
             Jupyter.pager.pager_element.css('position', 'relative');
-            //window.requestAnimationFrame(function() { /* Wait one frame */                    
+            //window.requestAnimationFrame(function() { // Wait one frame
             Jupyter.pager.pager_element.css('position', '');
             //});
-        });
+        });*/
 
         //this.showInPager(this._old_cell);
         //this.events.trigger('open_with_text.Pager', this._reply.content);
+
+        $('#agda-pager').show();
+        setNotebookWidth();
 
     }
 
@@ -440,6 +451,44 @@ define([
 
     }
 
+    function setNotebookWidth(cfg, st) {
+        var margin = 10;
+        var nb_inner = $('#notebook-container');
+        var nb_wrap_w = $('#notebook').width();
+        var sidebar = $('#agda-pager');
+        var visible_sidebar = sidebar.is(':visible');
+        var sidebar_w = visible_sidebar ? sidebar.outerWidth() : 0;
+        var available_space = nb_wrap_w - 2 * margin - sidebar_w;
+        var inner_css = { marginRight: '', marginLeft: '', width: '' };
+
+        console.log("[agda-extension] visible_sidebar: " + visible_sidebar);
+
+        if (visible_sidebar) {
+            var nb_inner_w = nb_inner.outerWidth();
+            //var nb_left_w = nb_inner.css('padding-left') + nb_inner.css('margin-left') + nb_wrap_w; //nb_inner.width();
+            if (available_space <= nb_inner_w + sidebar_w) {
+
+                var marginLeft = nb_inner.outerWidth() + 200 /*- nb_inner.css('margin-left') - nb_inner.css('padding-left')*/ + margin;
+                console.log("[agda-extension] resizing #agda-pager, marginLeft = " + marginLeft);
+
+                // shift notebook to the left
+                inner_css.marginRight = sidebar_w + margin;
+                //inner_css.marginLeft = nb_inner_w - inner_css.marginRight - nb_inner.width();
+
+                sidebar.css('margin-left', marginLeft + 'px');
+                sidebar.css('margin-right', '10px');
+
+                if (available_space <= nb_inner_w) {
+                    // slim notebook if necessary
+                    inner_css.width = available_space;
+                }
+            }
+        } else {
+
+        }
+        nb_inner.css(inner_css);
+    }
+
     var agda_init = function() {
         Jupyter.notebook.config.loaded.then(function() {
 
@@ -472,6 +521,54 @@ define([
                     $('<span>').addClass("ui-icon ui-icon-close")
                 )
             );
+
+            var agda_pager = $('<div id="agda-pager"/>')
+                .css('display', 'none')
+                .append(
+                    $('<a>').attr('role', "button")
+                    .attr('title', i18n.msg._("close"))
+                    .addClass('ui-button')
+                    .click(function() {
+                        $('#agda-pager').hide();
+                        setNotebookWidth();
+                    })
+                    .append($('<span>').addClass("ui-icon ui-icon-close"))
+                )
+                .append(
+                    $('<div id = "agda-pager-container" class = "agda-pager-container"><div/>'))
+                //.prependTo('#notebook-container');
+                .prependTo('#site');
+
+            /*agda_pager.resizable({
+                handles: 'all',
+                resize: function(event, ui) {
+                    //if (cfg.sideBar) {
+                    // unset the height set by jquery resizable
+                    $('#agda-pager').css('height', '');
+                    $('#agda-pager').css('width', '');
+                    //setNotebookWidth(cfg, st)
+                    //}
+                },
+                start: function(event, ui) {
+                    //if (!cfg.sideBar) {
+                    //    cfg.toc_section_display = setMd('toc_section_display', true);
+                    //    makeUnmakeMinimized(cfg);
+                    //}
+                },
+                stop: function() {},
+                containment: 'parent',
+                minHeight: 100,
+                minWidth: 165,
+            });*/
+
+            setNotebookWidth();
+
+            var callbackPageResize = function(evt) {
+                setNotebookWidth();
+            };
+
+            $(window).on('resize', callbackPageResize);
+            events.on("resize-header.Page toggle-all-headers", callbackPageResize);
 
             events.on("finished_execute.CodeCell", finished_execute_handler);
             events.on("finished_execute.MarkdownCell", finished_execute_handler);
