@@ -350,6 +350,19 @@ define([
             cell.clear_output(false, true);
             cell.output_area.fromJSON(outputs, data.metadata);
         }
+
+        var moduleName = cell.metadata.moduleName;
+        console.log("[agda-extension] finished_execute_handler, moduleName: " + moduleName);
+
+        var moduleName_element = cell.moduleName_element;
+        moduleName_element.empty();
+
+        if (moduleName) {
+            // update the module name
+            moduleName_element.append("<p>" + moduleName + "</p>");
+        } else {
+            moduleName_element.append("<p> undefined </p>");
+        }
     };
 
     var remove_all_highlights = function(cell) {
@@ -418,14 +431,16 @@ define([
 
             if (user_expressions) {
 
-                //console.log("shell_reply_handler user_expressions:" + user_expressions);
                 var fileName = user_expressions["fileName"];
 
                 if (fileName) {
+                    // save the module file name in the cell metadata
+                    cell.metadata.fileName = fileName;
+                }
 
-                    //console.log("shell_reply_handler fileName:" + fileName);
-                    cell.metadata.fileName = fileName; // save the module file name in the cell metadata
-
+                var moduleName = user_expressions["moduleName"];
+                if (moduleName) {
+                    cell.metadata.moduleName = moduleName;
                 }
 
                 var holes = user_expressions["holes"];
@@ -441,7 +456,6 @@ define([
                         highlight_hole_in_cell_and_store_in_metadata(cell, hole);
 
                     }
-
 
                 }
 

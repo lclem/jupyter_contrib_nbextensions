@@ -55,6 +55,20 @@ define([
 
     //var original_execute_cell_and_select_below = Notebook.prototype.execute_cell_and_select_below;
 
+    var old_CodeCell_create_element = CodeCell.prototype.create_element;
+    CodeCell.prototype.create_element = function() {
+
+        old_CodeCell_create_element.apply(this, arguments);
+        var cell = this.element;
+
+        var moduleName_element = $('<div><div/>').addClass("module-name");
+        //filename_element.append("<p> ciao ciao </p>");
+
+        this.input.append(moduleName_element);
+        this.moduleName_element = moduleName_element;
+
+    }
+
     Notebook.prototype.execute_cell_and_select_below = function() {
         var indices = this.get_selected_cells_indices();
         var cell_index;
@@ -238,6 +252,10 @@ define([
              display: none;
          }
          */
+
+        var moduleName_element = $('<div><div/>').addClass("module-name");
+        this.input.append(moduleName_element);
+        this.moduleName_element = moduleName_element;
 
     };
 
@@ -502,22 +520,22 @@ define([
 
     var upgrade_cell = function(cell, index) {
 
-        if (cell.cell_type === 'markdown') {
+        //if (cell.cell_type === 'markdown') {
 
-            console.log("[literate-markdown] reloading cell with index: " + index);
+        console.log("[literate-markdown] reloading cell with index: " + index);
 
-            var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
-            new_cell.unrender();
-            new_cell.set_text(cell.get_text());
-            new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
-            var cell_index = Jupyter.notebook.find_cell_index(cell);
-            Jupyter.notebook.delete_cell(cell_index);
-            //render_cell(new_cell);
-            new_cell.execute();
+        var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
+        new_cell.unrender();
+        new_cell.set_text(cell.get_text());
+        new_cell.metadata = JSON.parse(JSON.stringify(cell.metadata));
+        var cell_index = Jupyter.notebook.find_cell_index(cell);
+        Jupyter.notebook.delete_cell(cell_index);
+        //render_cell(new_cell);
+        new_cell.execute();
 
-        } else {
-            cell.execute();
-        }
+        //} else {
+        //    cell.execute();
+        //}
 
         var cm = cell.code_mirror;
         cm.setOption("lineWrapping", true);
@@ -544,20 +562,20 @@ define([
         var ncells = Jupyter.notebook.ncells();
         var cells = Jupyter.notebook.get_cells();
 
-        var x = document.getElementsByClassName('text_cell');
+        //var x = document.getElementsByClassName('text_cell');
 
-        var i;
-        for (i = 0; i < x.length; i++) {
+        //var i;
+        //for (i = 0; i < x.length; i++) {
 
-            //x[i].classList.add('code_cell');
-            //x[i].classList.add('literate_cell');
-            //x[i].classList.remove('text_cell');
+        //x[i].classList.add('code_cell');
+        //x[i].classList.add('literate_cell');
+        //x[i].classList.remove('text_cell');
 
-        }
+        //}
 
         for (var i = 0; i < ncells; i++) {
             var cell = cells[i];
-            var element = cell.element;
+            //var element = cell.element;
 
 
             //var text = cell.element.getElementById('text');
