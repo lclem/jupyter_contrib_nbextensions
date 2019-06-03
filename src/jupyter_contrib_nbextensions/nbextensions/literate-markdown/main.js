@@ -8,6 +8,7 @@ define([
     'services/config',
     'notebook/js/mathjaxutils',
     'base/js/events',
+    'services/kernels/kernel',
     'notebook/js/cell',
     'notebook/js/textcell',
     'notebook/js/codecell',
@@ -28,6 +29,7 @@ define([
     configmod,
     mathjaxutils,
     events,
+    kernel,
     cell,
     textcell,
     codecell,
@@ -41,6 +43,7 @@ define([
 ) {
     "use strict";
 
+    var Kernel = kernel.Kernel;
     var Cell = cell.Cell;
     var CodeCell = codecell.CodeCell;
     var TextCell = textcell.TextCell;
@@ -71,7 +74,7 @@ define([
 
     Notebook.prototype.execute_cell_and_select_below = function() {
         var indices = this.get_selected_cells_indices();
-        var cell_index;
+        var cell_index = -1;
         if (indices.length > 1) {
             this.execute_cells(indices);
             cell_index = Math.max.apply(Math, indices);
@@ -274,6 +277,100 @@ define([
         */
 
     };
+
+    var cell_to_execute;
+
+    var CodeCell_execute_orig = CodeCell.prototype.execute;
+    CodeCell.prototype.execute = function(stop_on_error) {
+
+        console.log("[literate-markdown] CodeCell.prototype.execute");
+
+        cell_to_execute = this;
+        return CodeCell_execute_orig.apply(this, [stop_on_error]);
+
+    }
+
+    var old_execute = Kernel.prototype.execute;
+    Kernel.prototype.execute = function(code, callbacks, options) {
+
+        console.log("[literate-markdown] Kernel.prototype.execute, user_expressions: " + options.user_expressions);
+
+        if (typeof options.user_expressions === 'undefined')
+            options.user_expressions = {};
+
+        var notebookName = Jupyter.notebook.notebook_name;
+        notebookName = notebookName.replace(".ipynb", "");
+        options.user_expressions["notebookName"] = notebookName;
+
+        //console.log("[literate-markdown] notebook: " + JSON.stringify(Jupyter.notebook));
+
+        if (cell_to_execute) {
+
+            var cells = Jupyter.notebook.get_cells();
+            var ids_before = [];
+
+            /*
+            //first semantics: collect all cells above this one
+            var ncells = Jupyter.notebook.ncells();
+
+            // find the id's of all cells above this one
+            for (var i = 0; i < ncells; i++) {
+                var cell = cells[i];
+                if (cell.cell_id != cell_to_execute.cell_id) {
+                    var len = cell.metadata.defaultPrequelLength;
+                    // add this id only if the cell has the default prequel
+                    if (len && len > 0)
+                        ids_before.push(cell.metadata.id);
+                } else
+                    break;
+            }*/
+
+            // current semantics: collect all cells above this one
+            // up to the first one which has an explicit module name
+
+            var index = Jupyter.notebook.find_cell_index(cell_to_execute);
+            var preamble = "{-# OPTIONS --allow-unsolved-metas #-} \n"
+            preamble += "module " + notebookName + ".cell" + cell_to_execute.metadata.id + " where \n"
+                //var preambleLength = 2;
+
+            console.log("[literate-markdown] cell_to_execute: " + JSON.stringify(cell_to_execute));
+
+            for (var i = index - 1; i > 0; i--) {
+
+                var cell = cells[i];
+
+                //console.log("[literate-markdown] cell: " + JSON.stringify(cell));
+
+                //preambleLength += 1;
+
+                // use the automatically generated module name
+                if (cell.metadata.preambleLength > 0) {
+                    var imp = "open import " + notebookName + ".cell" + cell.metadata.id + " public \n";
+                    console.log("[literate-markdown] adding import to preamble: " + imp);
+                    preamble += imp
+                } else if (typeof cell.metadata.moduleName != 'undefined') {
+                    var imp = "open import " + cell.metadata.moduleName + " public \n";
+                    console.log("[literate-markdown] adding import to preamble: " + imp);
+                    preamble += imp
+                    break;
+                } else {
+                    console.log("[literate-markdown] skipping cell " + cell.metadata.id);
+                }
+
+            }
+
+            options.user_expressions["cellId"] = cell_to_execute.metadata.id;
+            options.user_expressions["preamble"] = preamble;
+
+        } else {
+
+            options.user_expressions["cellId"] = "";
+            options.user_expressions["preamble"] = "";
+
+        }
+
+        return old_execute.apply(this, [code, callbacks, options]);
+    }
 
     MarkdownCell.prototype.execute = function(stop_on_error) {
 
@@ -524,6 +621,11 @@ define([
 
         console.log("[literate-markdown] reloading cell with index: " + index);
 
+        var id = cell.metadata.id
+        if (id) {
+            idx = Math.max(idx, id);
+        }
+
         var new_cell = Jupyter.notebook.insert_cell_above(cell.cell_type, index);
         new_cell.unrender();
         new_cell.set_text(cell.get_text());
@@ -605,7 +707,34 @@ define([
         // event: if kernel_ready (kernel change/restart): add/remove a menu item
         //events.on("kernel_ready.Kernel", function() { })
         // events.on('execute.CodeCell', highlight_toc_item);
+
+        events.on("create.Cell", onCreateCell);
+
     }
+
+    var idx = 0;
+
+    // when a new cell is created, generate a new unique id for this cell
+    var onCreateCell = function(evt, data) {
+
+        var cell = data.cell;
+        var index = data.index;
+
+        console.log("[literate-markdown] onCreateCell, current id: " + idx);
+
+        var id = cell.metadata.id
+        if (id) {
+            idx = Math.max(idx, id);
+        } else
+            cell.metadata.id = idx;
+
+        idx += 1;
+
+        console.log("[literate-markdown] onCreateCell, next id: " + idx);
+
+        //console.log("[literate-markdown] onCreateCell, metadata: " + JSON.stringify(cell.metadata));
+
+    };
 
     var load_css = function() {
         var link = document.createElement("link");

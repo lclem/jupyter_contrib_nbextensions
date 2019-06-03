@@ -16,6 +16,7 @@ div.input_area {
 
 div.output_subarea {
     padding: 10px !important;
+    padding-bottom: 0px !important;
 }
 
 div.prompt,
@@ -310,8 +311,8 @@ div#pager .ui-resizable-handle {
 .rendered_html h4:first-child,
 .rendered_html h5:first-child,
 .rendered_html h6:first-child {
-    margin-top: 0em !important;
-    margin-bottom: 0.8em !important;
+    margin-top: 0.5em !important;
+    margin-bottom: 1em !important;
 }
 
 div.rendered_html h1 {
@@ -404,4 +405,8 @@ div.module-name {
     margin-left: -40px;
     padding-left: 40px;
     width: 40px;
+}
+
+.end_space {
+    min-height: 0px !important;
 }

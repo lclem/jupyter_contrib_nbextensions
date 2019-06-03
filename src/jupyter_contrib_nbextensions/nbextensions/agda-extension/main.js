@@ -308,6 +308,11 @@ define([
                 var long_fname = match[1];
                 var fname = match[2];
                 var from = match[3];
+
+                // adjust if this cell uses a default prequel
+                if (cell.metadata.preambleLength)
+                    from -= Number(cell.metadata.preambleLength);
+
                 var to = from;
 
                 if (match[5] !== undefined) {
@@ -340,11 +345,10 @@ define([
         cell.output_area.do_not_expand = false;
 
         if (outputs !== undefined && outputs[0] !== undefined) {
-
             var output = outputs[0].text;
             var new_output = process_new_output(cell, output);
 
-            console.log("[agda-extension] finished_execute_handler, original output: " + output + ", new output: " + new_output);
+            //console.log("[agda-extension] finished_execute_handler, original output: " + output + ", new output: " + new_output);
 
             outputs[0].text = new_output;
             cell.clear_output(false, true);
@@ -358,8 +362,11 @@ define([
         moduleName_element.empty();
 
         if (moduleName) {
+            // remove the notebook name part
+            var notebook_name = Jupyter.notebook.notebook_name.replace(".ipynb", "");
+            moduleName = moduleName.replace(notebook_name + ".", "");
             // update the module name
-            moduleName_element.append("<p>" + moduleName + "</p>");
+            moduleName_element.append("<p style=\"white-space: nowrap;\">" + moduleName + "</p>");
         } else {
             moduleName_element.append("<p> undefined </p>");
         }
@@ -385,6 +392,7 @@ define([
         cell.output_area.collapse();
         cell.output_area.do_not_expand = true;
         remove_all_highlights(cell);
+        unmake_cell_green(cell);
 
     };
 
@@ -446,17 +454,19 @@ define([
                 var holes = user_expressions["holes"];
 
                 if (holes) {
-
                     console.log("shell_reply_handler holes: " + holes);
                     cell.metadata.holes = holes;
-
                     for (const hole of cell.metadata.holes) {
-
                         console.log("process_new_output hole: " + hole);
                         highlight_hole_in_cell_and_store_in_metadata(cell, hole);
-
                     }
 
+                }
+
+                // indicates that this cell uses a default preamble
+                var preambleLength = user_expressions["preambleLength"];
+                if (preambleLength) {
+                    cell.metadata.preambleLength = preambleLength;
                 }
 
             }
@@ -621,7 +631,6 @@ define([
             $(this).has("code.language-agda").addClass("language-agda");
         });
     };
-
 
     var load_css = function() {
         var link = document.createElement("link");
