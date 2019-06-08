@@ -357,19 +357,6 @@ define([
 
         var moduleName = cell.metadata.moduleName;
         console.log("[agda-extension] finished_execute_handler, moduleName: " + moduleName);
-
-        var moduleName_element = cell.moduleName_element;
-        moduleName_element.empty();
-
-        if (moduleName) {
-            // remove the notebook name part
-            var notebook_name = Jupyter.notebook.notebook_name.replace(".ipynb", "");
-            moduleName = moduleName.replace(notebook_name + ".", "");
-            // update the module name
-            moduleName_element.append("<p style=\"white-space: nowrap;\">" + moduleName + "</p>");
-        } else {
-            moduleName_element.append("<p> undefined </p>");
-        }
     };
 
     var remove_all_highlights = function(cell) {
@@ -439,21 +426,34 @@ define([
 
             if (user_expressions) {
 
-                var fileName = user_expressions["fileName"];
-
-                if (fileName) {
+                if ("fileName" in user_expressions) {
                     // save the module file name in the cell metadata
+                    var fileName = user_expressions["fileName"];
                     cell.metadata.fileName = fileName;
                 }
 
-                var moduleName = user_expressions["moduleName"];
-                if (moduleName) {
+                if ("moduleName" in user_expressions) {
+                    var moduleName = user_expressions["moduleName"];
                     cell.metadata.moduleName = moduleName;
+
+                    // update the corresponding element
+
+                    var moduleName_element = cell.moduleName_element;
+                    moduleName_element.empty();
+
+                    if (moduleName) {
+                        // remove the notebook name part
+                        var notebook_name = Jupyter.notebook.notebook_name.replace(".ipynb", "");
+                        moduleName = moduleName.replace(notebook_name + ".", "");
+                        // update the module name
+                        moduleName_element.append("<p style=\"white-space: nowrap;\">" + moduleName + "</p>");
+                    } else {
+                        moduleName_element.append("<p> undefined </p>");
+                    }
                 }
 
-                var holes = user_expressions["holes"];
-
-                if (holes) {
+                if ("holes" in user_expressions) {
+                    var holes = user_expressions["holes"];
                     console.log("shell_reply_handler holes: " + holes);
                     cell.metadata.holes = holes;
                     for (const hole of cell.metadata.holes) {
@@ -464,9 +464,10 @@ define([
                 }
 
                 // indicates that this cell uses a default preamble
-                var preambleLength = user_expressions["preambleLength"];
-                if (preambleLength) {
+                if ("preambleLength" in user_expressions) {
+                    var preambleLength = user_expressions["preambleLength"];
                     cell.metadata.preambleLength = preambleLength;
+                    console.log("[agda-extension] updating to new preambleLength: " + preambleLength);
                 }
 
             }

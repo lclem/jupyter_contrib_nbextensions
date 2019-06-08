@@ -346,7 +346,7 @@ define([
                 // use the automatically generated module name
                 if (cell.metadata.preambleLength > 0) {
                     var imp = "open import " + notebookName + ".cell" + cell.metadata.id + " public \n";
-                    console.log("[literate-markdown] adding import to preamble: " + imp);
+                    console.log("[literate-markdown] adding import to preamble (default): " + imp);
                     preamble += imp
                 } else if (typeof cell.metadata.moduleName != 'undefined') {
                     var imp = "open import " + cell.metadata.moduleName + " public \n";

@@ -10,7 +10,7 @@ div.input_area {
     /*margin: 8px !important;*/
     /*background: #ffffff !important;*/
     /*border: 5px solid #ffffff !important;*/
-    border: 1px solid #ebebebeb;
+    border: 1px solid #bebebebe;
     border-radius: 3px !important;
 }
 
@@ -80,10 +80,10 @@ div.prompt_container {
 */
 
 div.CodeMirror-lines {
-    padding-bottom: 0.5em !important;
-    padding-left: 0 !important;
+    padding-top: 1em !important;
     padding-right: 0em !important;
-    padding-top: 0.5em !important;
+    padding-bottom: 1em !important;
+    padding-left: 0 !important;
 }
 
 .CodeMirror-linenumbers {
@@ -179,6 +179,7 @@ div.cell {
     background: #ffffff !important;
     margin-bottom: 10px;
     margin-top: 10px;
+    width: 95%
 }
 
 
@@ -193,8 +194,21 @@ div.cell {
 
 .CodeMirror pre {
     padding: 0em !important;
-    padding-right: 15px !important;
+    padding-right: 0px !important;
     padding-left: 10px !important;
+    margin-left: 0 !important;
+    line-height: 155% !important;
+}
+
+
+/* the margin-left of CodeMirror-cursors must be the same as that of .CodeMirror pre and div.CodeMirror-selected */
+
+div.CodeMirror-cursors {
+    margin-left: 0px !important;
+}
+
+.cm-s-ipython div.CodeMirror-selected {
+    margin-left: 0 !important;
 }
 
 
@@ -409,4 +423,12 @@ div.module-name {
 
 .end_space {
     min-height: 0px !important;
+}
+
+.ctb_global_show .ctb_show~div.text_cell_render {
+    border: 0px solid #cfcfcf !important;
+}
+
+.celltoolbar {
+    border: none !important;
 }
