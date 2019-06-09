@@ -181,16 +181,30 @@ define([
             return false;
     }
 
-    var toggle_selected_input = function(cell) {
-        //cell.element.find("div.input").toggle('slow');
-        //cell.element.find("div.inner_cell").toggle('slow');
+    var perform_toggle = function(cell, animated) {
+
+        var speed = animated ? 'fast' : 0;
 
         if (cell.rendered) {
-            cell.element.find("div.text_cell_render").toggle('slow');
-        } else
-            cell.element.find("div.input_area").toggle('slow');
+            cell.element.find("div.text_cell_render").toggle(speed);
+        } else {
+            cell.element.find("div.input_area").toggle(speed);
+            cell.code_mirror.refresh();
+        }
+    }
 
+    var toggle_selected_input = function(cell) {
+
+        perform_toggle(cell, true);
         cell.metadata.hide_input = !cell.metadata.hide_input;
+
+        //if (cell.metadata.hide_input)
+        // make the button permanently visible
+        //cell.hide_this_cell.visibility = "visible";
+        //cell.hide_this_cell.show();
+        //else
+        //    cell.hide_this_cell.visibility = "hidden";
+
     };
 
     MarkdownCell.prototype.create_element = function() {
@@ -227,6 +241,8 @@ define([
             event.stopImmediatePropagation();
             toggle_selected_input(that);
         });
+
+        this.hide_this_cell = hide_this_cell;
 
         var prompt = $('<div/>').addClass('prompt input_prompt literate_prompt');
 
@@ -467,15 +483,10 @@ define([
         MarkdownCell.prototype.set_text.call(this, orig_text);
         MarkdownCell.prototype.render.call(this);
 
-        //restore the previous text using the undo facility
-        //no idea why 6 undo's is the magic number
-        //(expected 2 for the two set_text's calls above)
+        //2 undo's for the two set_text's calls above + execute
         this.code_mirror.undo();
         this.code_mirror.undo();
-        this.code_mirror.undo();
-        this.code_mirror.undo();
-        this.code_mirror.undo();
-        this.code_mirror.undo();
+        //        this.code_mirror.undo();
 
         this.auto_highlight();
         this.code_mirror.refresh();
@@ -487,6 +498,12 @@ define([
         var text = this.get_text();
         var blocks = text.split('````');
         var code = "";
+
+        // render only if it is not hidden
+        if (this.metadata.hide_input) {
+            //console.log("[literate-markdown] not rendering because hide_input = " + this.metadata.hide_input);
+            //return;
+        }
 
         //console.log("Blocks: " + blocks);
 
@@ -511,6 +528,10 @@ define([
         this.code_mirror.setValue(code);
         var cont = original_render.apply(this);
         this.code_mirror.setValue(text);
+        this.code_mirror.undo();
+        this.code_mirror.undo();
+        //        this.code_mirror.undo();
+
         //this.rendered = true;
         return cont;
 
@@ -699,6 +720,12 @@ define([
 
         var cm = cell.code_mirror;
         cm.setOption("lineWrapping", true);
+
+        // hide the cell
+        if (new_cell.metadata.hide_input) {
+            console.log("[literate-markdown] new_cell hide_input: " + new_cell.metadata.hide_input);
+            perform_toggle(new_cell, false);
+        }
 
     }
 

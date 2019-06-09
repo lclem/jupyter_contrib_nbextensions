@@ -291,6 +291,17 @@ div.hide_this_cell {
     color: #ff7823 !important;
 }
 
+div.hide_this_cell {
+    visibility: hidden;
+}
+
+
+/*div.prompt_container*/
+
+div.cell:hover .hide_this_cell {
+    visibility: visible;
+}
+
 .fa-chevron-up:before {
     content: "\f077";
     font-size: 9px;
