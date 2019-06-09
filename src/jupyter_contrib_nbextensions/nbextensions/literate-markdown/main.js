@@ -69,6 +69,7 @@ define([
 
         this.input.append(moduleName_element);
         this.moduleName_element = moduleName_element;
+        this.code_mirror.setOption('lineWrapping', true);
 
     }
 

@@ -40,6 +40,7 @@ div.prompt_container {
 
 .compile-error {
     background: rgb(255, 150, 150) !important;
+    margin-right: -5px;
 }
 
 .compile-ok {
@@ -53,6 +54,7 @@ div.prompt_container {
 
 .compile-hole {
     background: rgb(255, 255, 225);
+    margin-right: -5px;
     /* !important; */
 }
 
@@ -79,11 +81,13 @@ div.prompt_container {
 }
 */
 
-div.CodeMirror-lines {
+.CodeMirror-lines {
     padding-top: 1em !important;
-    padding-right: 0em !important;
+    padding-right: 1em !important;
     padding-bottom: 1em !important;
-    padding-left: 0 !important;
+    padding-left: 1em !important;
+    margin-left: -15px;
+    margin-right: -5px;
 }
 
 .CodeMirror-linenumbers {
