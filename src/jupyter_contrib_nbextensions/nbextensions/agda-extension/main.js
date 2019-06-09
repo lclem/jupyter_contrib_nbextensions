@@ -347,9 +347,11 @@ define([
         //check that the kernel is Agda
         if (cell.kernel.name != "agda") {
             console.log("[agda-extension] the kernel is " + cell.kernel.name + ", skipping");
-            return { load_ipython_extension: function() {} };
+            return;
         } else
             console.log("[agda-extension] the kernel is " + cell.kernel.name + ", continuing");
+
+        //console.log("[agda-extension] finished_execute_handler, outputs: " + JSON.stringify(outputs));
 
         if (outputs !== undefined && outputs[0] !== undefined) {
             var output = outputs[0].text;
@@ -387,7 +389,7 @@ define([
         //check that the kernel is Agda
         if (cell.kernel.name != "agda") {
             console.log("[agda-extension] the kernel is " + cell.kernel.name + ", skipping");
-            return { load_ipython_extension: function() {} };
+            return;
         } else
             console.log("[agda-extension] the kernel is " + cell.kernel.name + ", continuing");
 
@@ -408,7 +410,7 @@ define([
         //check that the kernel is Agda
         if (cell.kernel.name != "agda") {
             console.log("[agda-extension] the kernel is " + cell.kernel.name + ", skipping");
-            return { load_ipython_extension: function() {} };
+            return;
         } else
             console.log("[agda-extension] the kernel is " + cell.kernel.name + ", continuing");
 
