@@ -348,7 +348,7 @@ div#pager .ui-resizable-handle {
 .rendered_html h4:first-child,
 .rendered_html h5:first-child,
 .rendered_html h6:first-child {
-    margin-top: 0.5em !important;
+    margin-top: 0em !important;
     margin-bottom: 1em !important;
 }
 
@@ -438,10 +438,18 @@ div#maintoolbar {
 
 div.module-name {
     font-size: 9px !important;
-    margin-top: -8px;
+    margin-top: 0px;
     margin-left: -40px;
     padding-left: 40px;
-    width: 40px;
+    width: 0px;
+}
+
+p.module-name-text {
+    width: fit-content;
+    margin: 0px 0px 0px;
+    padding: 0px 5px 0px 5px;
+    border-radius: 5px;
+    height: inherit;
 }
 
 .end_space {

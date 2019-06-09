@@ -65,7 +65,6 @@ define([
         var cell = this.element;
 
         var moduleName_element = $('<div><div/>').addClass("module-name");
-        //filename_element.append("<p> ciao ciao </p>");
 
         this.input.append(moduleName_element);
         this.moduleName_element = moduleName_element;

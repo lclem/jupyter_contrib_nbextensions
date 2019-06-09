@@ -378,6 +378,8 @@ define([
         cm.eachLine(function(lineHandle) {
             cm.removeLineClass(lineHandle, "background", "compile-error");
             cm.removeLineClass(lineHandle, "background", "compile-hole");
+            cell.moduleName_element.find(".module-name-text").removeClass("compile-error");
+            cell.moduleName_element.find(".module-name-text").removeClass("compile-hole");
         });
         cell.metadata.codehighlighter = [];
         cell.metadata.code_hole_highlighter = [];
@@ -474,9 +476,9 @@ define([
                         var notebook_name = Jupyter.notebook.notebook_name.replace(".ipynb", "");
                         moduleName = moduleName.replace(notebook_name + ".", "");
                         // update the module name
-                        moduleName_element.append("<p style=\"white-space: nowrap;\">" + moduleName + "</p>");
+                        moduleName_element.append("<p style=\"white-space: nowrap;\">" + moduleName + "</p>").find("p").addClass("module-name-text");;
                     } else {
-                        moduleName_element.append("<p> undefined </p>");
+                        moduleName_element.append("<p> undefined </p>").find("p").addClass("module-name-text");
                     }
                 }
 
@@ -489,7 +491,21 @@ define([
                         highlight_hole_in_cell_and_store_in_metadata(cell, hole);
                     }
 
+                    // not very visible against white background
+                    //if (holes.length > 0)
+                    //    cell.moduleName_element.find(".module-name-text").addClass("compile-hole");
+                    //else
+                    //    cell.moduleName_element.find(".module-name-text").removeClass("compile-hole");
+
                 }
+
+                if ("isError" in user_expressions && user_expressions["isError"] == true) {
+                    var isError = user_expressions["isError"];
+                    console.log("shell_reply_handler isError: " + isError);
+                    cell.metadata.isError = isError;
+                    moduleName_element.find(".module-name-text").addClass("compile-error");
+                } else
+                    moduleName_element.find(".module-name-text").removeClass("compile-error");
 
                 // indicates that this cell uses a default preamble
                 if ("preambleLength" in user_expressions) {
@@ -502,6 +518,8 @@ define([
 
         }
 
+        //TODO: find all module names
+        //all_headers = $('.text_cell_render').find('[id]:header:not(:has(.tocSkip))');
     }
 
     function setAgdaNotebookWidth(cfg, st) {
