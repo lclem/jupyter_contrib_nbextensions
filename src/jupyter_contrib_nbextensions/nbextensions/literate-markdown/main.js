@@ -440,6 +440,7 @@ define([
         this.code_mirror.undo();
 
         this.auto_highlight();
+        this.code_mirror.refresh();
 
     };
 

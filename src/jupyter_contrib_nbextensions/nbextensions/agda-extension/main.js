@@ -209,7 +209,10 @@ define([
 
             //var cm = cell.element.find('CodeMirror')[0];
             //$(cm).addClass("compile-ok-border");
+
+            cell.code_mirror.refresh();
         }
+
     }
 
     var unmake_cell_green = function(cell) {
@@ -234,6 +237,7 @@ define([
 
             //var cm = cell.element.find('CodeMirror')[0];
             //$(cm).removeClass("compile-ok-border");
+            cell.code_mirror.refresh();
         }
     }
 
@@ -377,6 +381,8 @@ define([
         });
         cell.metadata.codehighlighter = [];
         cell.metadata.code_hole_highlighter = [];
+        cm.refresh();
+
     };
 
     var execute_handler = function(evt, data) {
@@ -441,7 +447,7 @@ define([
 
         console.log("shell_reply_handler cell: " + cell)
 
-        if (content && cell.kernel.name == "agda") {
+        if (content && cell && cell.kernel.name == "agda") {
 
             //console.log("shell_reply_handler content:" + content);
             var user_expressions = content.user_expressions;
