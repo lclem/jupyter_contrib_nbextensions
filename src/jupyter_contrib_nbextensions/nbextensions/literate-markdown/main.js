@@ -417,6 +417,17 @@ define([
         this.rendered = false;
         MarkdownCell.prototype.set_text.call(this, orig_text);
         MarkdownCell.prototype.render.call(this);
+
+        //restore the previous text using the undo facility
+        //no idea why 6 undo's is the magic number
+        //(expected 2 for the two set_text's calls above)
+        this.code_mirror.undo();
+        this.code_mirror.undo();
+        this.code_mirror.undo();
+        this.code_mirror.undo();
+        this.code_mirror.undo();
+        this.code_mirror.undo();
+
         this.auto_highlight();
 
     };
@@ -468,12 +479,8 @@ define([
 
             if (data.source !== undefined) {
                 this.set_text(data.source);
-                // make this value the starting point, so that we can only undo
-                // to this state, instead of a blank cell
                 this.code_mirror.clearHistory();
                 this.auto_highlight();
-                // TODO: This HTML needs to be treated as potentially dangerous
-                // user input and should be handled before set_rendered.
                 this.set_rendered(data.rendered || '');
                 render_cell(this);
             }
