@@ -96,7 +96,7 @@ define([
             original_expand.call(this);
     };
 
-    // var orig_show = Tooltip.prototype._show;
+    //var orig_show = Tooltip.prototype._show;
     Tooltip.prototype._show = function(reply) {
 
         //orig_show.call(this, reply);
@@ -344,6 +344,13 @@ define([
         var outputs = cell.output_area.toJSON();
         cell.output_area.do_not_expand = false;
 
+        //check that the kernel is Agda
+        if (cell.kernel.name != "agda") {
+            console.log("[agda-extension] the kernel is " + cell.kernel.name + ", skipping");
+            return { load_ipython_extension: function() {} };
+        } else
+            console.log("[agda-extension] the kernel is " + cell.kernel.name + ", continuing");
+
         if (outputs !== undefined && outputs[0] !== undefined) {
             var output = outputs[0].text;
             var new_output = process_new_output(cell, output);
@@ -376,6 +383,14 @@ define([
 
         // retrieve the contents of the output area
         var cell = data.cell;
+
+        //check that the kernel is Agda
+        if (cell.kernel.name != "agda") {
+            console.log("[agda-extension] the kernel is " + cell.kernel.name + ", skipping");
+            return { load_ipython_extension: function() {} };
+        } else
+            console.log("[agda-extension] the kernel is " + cell.kernel.name + ", continuing");
+
         cell.output_area.collapse();
         cell.output_area.do_not_expand = true;
         remove_all_highlights(cell);
@@ -390,6 +405,13 @@ define([
         var cell = data.cell;
         var change = data.change;
 
+        //check that the kernel is Agda
+        if (cell.kernel.name != "agda") {
+            console.log("[agda-extension] the kernel is " + cell.kernel.name + ", skipping");
+            return { load_ipython_extension: function() {} };
+        } else
+            console.log("[agda-extension] the kernel is " + cell.kernel.name + ", continuing");
+
         if (change) {
 
             unmake_cell_green(cell);
@@ -402,8 +424,6 @@ define([
 
     var shell_reply_handler = function(evt, data) {
 
-        //console.log("shell_reply_handler evt:" + (evt) + ", data: " + (data));
-        var kernel = data.kernel; //TODO: check that the kernel is Agda
         var reply = data.reply
         var content = reply.content;
 
@@ -419,7 +439,7 @@ define([
 
         console.log("shell_reply_handler cell: " + cell)
 
-        if (content) {
+        if (content && cell.kernel.name == "agda") {
 
             //console.log("shell_reply_handler content:" + content);
             var user_expressions = content.user_expressions;
@@ -530,8 +550,6 @@ define([
     var agda_init = function() {
         Jupyter.notebook.config.loaded.then(function() {
 
-            console.log("[agda-extension] init");
-
             //var md = IPython.notebook.metadata
             //md.css = md.css || [''];
             //add_css_list(IPython.toolbar.element,{'duck':null,'dark':{cm:'monokai'},'xkcd':null,'foo':null}, md);
@@ -627,10 +645,12 @@ define([
         // add the class "language-agda" to all pre elements of this cell that contain an element "code.language-agda"
         console.log("[agda-extension] rendered_handler");
         var cell = data.cell;
-        cell.element.find('div.text_cell_render pre').each(function(index, value) {
-            console.log($(this));
-            $(this).has("code.language-agda").addClass("language-agda");
-        });
+
+        if (cell.kernel.name == "agda")
+            cell.element.find('div.text_cell_render pre').each(function(index, value) {
+                console.log($(this));
+                $(this).has("code.language-agda").addClass("language-agda");
+            });
     };
 
     var load_css = function() {
