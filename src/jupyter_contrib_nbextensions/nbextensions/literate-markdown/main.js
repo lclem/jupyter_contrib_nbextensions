@@ -382,7 +382,21 @@ define([
 
         // extract blocks of code between executable code chunk markers "````"
         var blocks = text.split('````');
+        var len = blocks.length;
 
+        console.log("[literate-markdown] #blocks: " + len);
+
+        // raise an error if there is an odd number of lines "````"
+        // i.e., an even number of blocks
+        if (len % 2 == 0) {
+            console.log("[literate-markdown] even number of blocks, exiting");
+            var outputs = JSON.parse('[{ "output_type": "stream", "text": "", "name": "stdout" }]');
+            outputs[0].text = "Error: unmatched executable code delimiter \"````\"";
+            this.clear_output(false, true);
+            this.output_area.fromJSON(outputs);
+            return;
+
+        }
         // we are interested in odd blocks        
         var code = "";
         for (var i = 0; i < blocks.length - 1; i++) {
@@ -406,10 +420,7 @@ define([
             }
         }
 
-        //console.log("Extracted executable code chunks: \n" + code);
-
-        // TODO: disable undo while performing these changes
-        // TODO: raise an error if there is an odd number of lines "````"
+        console.log("[literate-markdown] executable code chunks: \n" + code);
 
         this.rendered = false;
         MarkdownCell.prototype.set_text.call(this, code);
