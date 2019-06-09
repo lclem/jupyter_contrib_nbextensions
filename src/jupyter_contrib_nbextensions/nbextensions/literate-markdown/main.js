@@ -171,6 +171,28 @@ define([
     MarkdownCell.prototype.insert_inline_image_from_blob = original_prototype.insert_inline_image_from_blob;
     MarkdownCell.prototype.bind_events = original_prototype.bind_events;
 
+    var cell_prototype_unrender = Cell.prototype.unrender;
+    Cell.prototype.unrender = function() {
+
+        // unrender the cell only if it is not hidden
+        if (!this.metadata.hide_input)
+            return cell_prototype_unrender.call(this);
+        else
+            return false;
+    }
+
+    var toggle_selected_input = function(cell) {
+        //cell.element.find("div.input").toggle('slow');
+        //cell.element.find("div.inner_cell").toggle('slow');
+
+        if (cell.rendered) {
+            cell.element.find("div.text_cell_render").toggle('slow');
+        } else
+            cell.element.find("div.input_area").toggle('slow');
+
+        cell.metadata.hide_input = !cell.metadata.hide_input;
+    };
+
     MarkdownCell.prototype.create_element = function() {
 
         /*
@@ -196,7 +218,15 @@ define([
             event.stopImmediatePropagation();
             that.execute();
         });
-        //run_this_cell.prop('hidden', true);
+        run_this_cell.prop('hidden', true);
+
+        var hide_this_cell = $('<div></div>').addClass('hide_this_cell');
+        hide_this_cell.prop('title', 'Hide this cell');
+        hide_this_cell.append('<i class="fa-chevron-up fa"></i>');
+        hide_this_cell.click(function(event) {
+            event.stopImmediatePropagation();
+            toggle_selected_input(that);
+        });
 
         var prompt = $('<div/>').addClass('prompt input_prompt literate_prompt');
 
@@ -225,7 +255,7 @@ define([
         var render_area = $('<div/>').addClass('text_cell_render rendered_html').attr('tabindex', '-1');
         inner_cell.append(render_area);
 
-        prompt_container.append(prompt); //.append(run_this_cell);
+        prompt_container.append(prompt).append(hide_this_cell); //.append(run_this_cell);
         input.append(prompt_container).append(inner_cell);
 
         var output = $('<div></div>');
@@ -421,6 +451,14 @@ define([
         }
 
         console.log("[literate-markdown] executable code chunks: \n" + code);
+
+        // it is important that the rest of the code below is executed only if code is not empty,
+        // otherwise it will mess up with the undo history
+        if (code == "") {
+            this.rendered = false;
+            MarkdownCell.prototype.render.call(this);
+            return;
+        }
 
         this.rendered = false;
         MarkdownCell.prototype.set_text.call(this, code);

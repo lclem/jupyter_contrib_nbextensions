@@ -268,13 +268,15 @@ div.output_wrapper {
     margin-left: 10px;
 }
 
-div.run_this_cell {
+div.run_this_cell,
+div.hide_this_cell {
     visibility: visible;
     display: flex;
     cursor: pointer;
     color: #333;
     padding-top: 5px;
     padding-bottom: 5px;
+    padding-left: 17px;
     margin-top: 0px;
     margin-left: 5px;
     width: 2ex;
@@ -282,10 +284,16 @@ div.run_this_cell {
     background-color: transparent;
 }
 
-.run_this_cell:hover {
+.run_this_cell:hover,
+.hide_this_cell:hover {
     visibility: visible;
     background: #ffffff !important;
     color: #ff7823 !important;
+}
+
+.fa-chevron-up:before {
+    content: "\f077";
+    font-size: 9px;
 }
 
 div#pager .ui-resizable-handle {
