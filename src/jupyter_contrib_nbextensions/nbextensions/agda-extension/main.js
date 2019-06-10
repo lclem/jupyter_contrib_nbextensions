@@ -447,8 +447,6 @@ define([
         // the current cell is the one before the selected one (not always!!)
         //var cell = IPython.notebook.get_cell(index - 1); 
 
-        console.log("shell_reply_handler cell: " + cell)
-
         if (content && cell && cell.kernel.name == "agda") {
 
             //console.log("shell_reply_handler content:" + content);
@@ -476,9 +474,14 @@ define([
                         var notebook_name = Jupyter.notebook.notebook_name.replace(".ipynb", "");
                         moduleName = moduleName.replace(notebook_name + ".", "");
                         // update the module name
-                        moduleName_element.append("<p style=\"white-space: nowrap;\">" + moduleName + "</p>").find("p").addClass("module-name-text");;
+                        var elem = $("<span>").css("white-space", "nowrap").text(moduleName).addClass("module-name-text");
+                        //elem.append($("<a>").addClass("anchor-link").attr("href", "#" + moduleName).text("¶"));
+                        //moduleName_element.append("<p style=\"white-space: nowrap;\">" + moduleName + "</p>").find("p").addClass("module-name-text");
+                        elem.attr('id', moduleName);
+                        moduleName_element.append(elem);
                     } else {
-                        moduleName_element.append("<p> undefined </p>").find("p").addClass("module-name-text");
+                        var elem = $("<span>").text("undefined").addClass("module-name-text");
+                        moduleName_element.append(elem);
                     }
                 }
 
@@ -518,8 +521,63 @@ define([
 
         }
 
-        //TODO: find all module names
-        //all_headers = $('.text_cell_render').find('[id]:header:not(:has(.tocSkip))');
+        process_summary();
+    }
+
+    function process_summary() {
+        var cell_summary;
+        var cells = IPython.notebook.get_cells();
+        var lcells = cells.length;
+        for (var i = 0; i < lcells; i++) {
+            if (cells[i].metadata.summary) {
+                cell_summary = cells[i];
+                break;
+            }
+        }
+
+        if (cell_summary === undefined) {
+            cell_summary = IPython.notebook.insert_cell_above('markdown', 0);
+            cell_summary.metadata.summary = true;
+        }
+
+        var module_names = $('.module-name-text').clone().removeClass('module-name-text').addClass('module-name-text-summary');
+        // $("#notebook").find("p.module-name-text");
+
+        var text = $("<div></div>");
+        module_names.each(function(i) {
+            var value = $(this).text();
+            $(this).removeAttr('id');
+            console.log("[agda-extension] module-name-text value: " + value);
+            text.append($("<a>").attr("href", "#" + value).append($(this)).on('click', function(evt) {
+                setTimeout(function() { $.ajax() }, 100);
+                evt.preventDefault();
+                var currentSection = $('#toc .highlight_on_scroll a').data('tocModifiedId')
+                if (window.history.state != null) {
+                    if (window.history.state.back != currentSection) {
+                        window.history.pushState({ 'back': currentSection }, "", '')
+                    }
+                }
+                var trg_id = $(evt.currentTarget).attr('data-toc-modified-id');
+                window.history.pushState({ 'back': trg_id }, "", '');
+                window.history.lastjump = trg_id;
+
+                // use native scrollIntoView method with semi-unique id
+                // ! browser native click does't follow links on all browsers
+                document.getElementById(trg_id).scrollIntoView(true)
+
+            }));
+
+            if (i < module_names.length - 1)
+                text.append($('<span>').text(", ").addClass('module-name-text-summary'));
+        });
+
+        var new_html = '<h6>' + $('<div>').text("Summary").html() + '<span class="summary"></span></h6>' + text.html() + '\n';
+        //'<div class="toc">' +
+        //$('#toc').html() +
+        //'</div>';
+
+        cell_summary.set_text(new_html);
+        cell_summary.render();
     }
 
     function setAgdaNotebookWidth(cfg, st) {

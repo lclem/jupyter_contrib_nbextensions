@@ -40,7 +40,12 @@ div.prompt_container {
 
 .compile-error {
     background: rgb(255, 150, 150) !important;
+    color: black !important;
     margin-right: -5px;
+}
+
+.compile-error:link {
+    color: black;
 }
 
 .compile-ok {
@@ -444,12 +449,26 @@ div.module-name {
     width: 0px;
 }
 
-p.module-name-text {
+.module-name-text {
     width: fit-content;
     margin: 0px 0px 0px;
     padding: 0px 5px 0px 5px;
     border-radius: 5px;
     height: inherit;
+    background: none !important;
+}
+
+.module-name-text-summary {
+    font-size: 9px;
+    width: fit-content;
+    margin: 0px 0px 0px;
+    color: black;
+}
+
+.rendered_html :visited,
+.rendered_html :visited:active,
+.rendered_html :visited:focus {
+    color: black;
 }
 
 .end_space {

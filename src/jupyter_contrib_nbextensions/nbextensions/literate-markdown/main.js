@@ -62,10 +62,8 @@ define([
     CodeCell.prototype.create_element = function() {
 
         old_CodeCell_create_element.apply(this, arguments);
-        var cell = this.element;
 
-        var moduleName_element = $('<div><div/>').addClass("module-name");
-
+        var moduleName_element = $('<div>').addClass("module-name");
         this.input.append(moduleName_element);
         this.moduleName_element = moduleName_element;
         this.code_mirror.setOption('lineWrapping', true);
