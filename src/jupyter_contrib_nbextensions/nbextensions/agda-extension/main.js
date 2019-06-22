@@ -410,17 +410,20 @@ define([
 
     var change_handler = function(evt, data) {
 
-        console.log("[agda-extension] change_handler");
+        //console.log("[agda-extension] change_handler");
 
         var cell = data.cell;
         var change = data.change;
 
         //check that the kernel is Agda
-        if (cell.kernel.name != "agda") {
-            console.log("[agda-extension] the kernel is " + cell.kernel.name + ", skipping");
+        if (cell.kernel === undefined) {
+            //console.log("[agda-extension] kernel is undefined, skipping");
+            return;
+        } else if (cell.kernel.name != "agda") {
+            //console.log("[agda-extension] the kernel is " + cell.kernel.name + ", skipping");
             return;
         } else
-            console.log("[agda-extension] the kernel is " + cell.kernel.name + ", continuing");
+            //console.log("[agda-extension] the kernel is " + cell.kernel.name + ", continuing");
 
         if (change) {
 
@@ -476,7 +479,7 @@ define([
                         // update the module name
                         var elem = $("<span>").css("white-space", "nowrap").text(moduleName).addClass("module-name-text");
                         //elem.append($("<a>").addClass("anchor-link").attr("href", "#" + moduleName).text("¶"));
-                        //moduleName_element.append("<p style=\"white-space: nowrap;\">" + moduleName + "</p>").find("p").addClass("module-name-text");
+                        //moduleName_element.append("<p style=\"white-space: nowrap\">" + moduleName + "</p>").find("p").addClass("module-name-text");
                         elem.attr('id', moduleName);
                         moduleName_element.append(elem);
                     } else {
@@ -524,6 +527,31 @@ define([
         process_summary();
     }
 
+    var link_click_callback = function(evt) {
+        // workaround for https://github.com/jupyter/notebook/issues/699
+        console.log("[agda-extension] click on module name link");
+
+        setTimeout(function() { $.ajax() }, 100);
+        evt.preventDefault();
+        var currentSection = $('#toc .highlight_on_scroll a').data('tocModifiedId')
+        if (window.history.state != null) {
+            if (window.history.state.back != currentSection) {
+                window.history.pushState({ 'back': currentSection }, "", '')
+            }
+        }
+        var trg_id = $(evt.currentTarget).attr('id');
+        window.history.pushState({ 'back': trg_id }, "", '');
+        window.history.lastjump = trg_id;
+
+        var trg = document.getElementById(trg_id);
+        teg.scrollIntoView(true);
+        var cell = $(trg).closest('.cell').data('cell');
+        Jupyter.notebook.select(Jupyter.notebook.find_cell_index(cell));
+        highlight_toc_item("toc_link_click", {
+            cell: cell
+        });
+    }
+
     function process_summary() {
         var cell_summary;
         var cells = IPython.notebook.get_cells();
@@ -548,24 +576,14 @@ define([
             var value = $(this).text();
             $(this).removeAttr('id');
             console.log("[agda-extension] module-name-text value: " + value);
-            text.append($("<a>").attr("href", "#" + value).append($(this)).on('click', function(evt) {
-                setTimeout(function() { $.ajax() }, 100);
-                evt.preventDefault();
-                var currentSection = $('#toc .highlight_on_scroll a').data('tocModifiedId')
-                if (window.history.state != null) {
-                    if (window.history.state.back != currentSection) {
-                        window.history.pushState({ 'back': currentSection }, "", '')
-                    }
-                }
-                var trg_id = $(evt.currentTarget).attr('data-toc-modified-id');
-                window.history.pushState({ 'back': trg_id }, "", '');
-                window.history.lastjump = trg_id;
 
-                // use native scrollIntoView method with semi-unique id
-                // ! browser native click does't follow links on all browsers
-                document.getElementById(trg_id).scrollIntoView(true)
+            var a = $("<a>").attr("href", "#" + value);
 
-            }));
+            // workaround does not work because html inside markdown cells is sanitized and the callback below is not called
+            a.on('click', link_click_callback);
+            a.append($(this))
+
+            text.append(a);
 
             if (i < module_names.length - 1)
                 text.append($('<span>').text(", ").addClass('module-name-text-summary'));
@@ -578,6 +596,8 @@ define([
 
         cell_summary.set_text(new_html);
         cell_summary.render();
+
+        $("a").find(".anchor-link").text("");
     }
 
     function setAgdaNotebookWidth(cfg, st) {
@@ -730,7 +750,7 @@ define([
         console.log("[agda-extension] rendered_handler");
         var cell = data.cell;
 
-        if (cell.kernel.name == "agda")
+        if (cell.kernel !== undefined && cell.kernel.name == "agda")
             cell.element.find('div.text_cell_render pre').each(function(index, value) {
                 console.log($(this));
                 $(this).has("code.language-agda").addClass("language-agda");

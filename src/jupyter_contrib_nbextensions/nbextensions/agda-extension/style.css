@@ -462,14 +462,15 @@ div.module-name {
     font-size: 9px;
     width: fit-content;
     margin: 0px 0px 0px;
-    color: black;
+    /*color: black;*/
 }
 
-.rendered_html :visited,
+
+/*.rendered_html :visited,
 .rendered_html :visited:active,
 .rendered_html :visited:focus {
     color: black;
-}
+}*/
 
 .end_space {
     min-height: 0px !important;
