@@ -264,7 +264,6 @@ define([
     };
 
     MarkdownCell.prototype.set_input_prompt = function(number) {
-
     };
 
     var cell_to_execute;
@@ -668,6 +667,8 @@ define([
             upgrade_cell(cell, i);
         }
     };
+
+// ================= end of code imported from literate-markdown ======================
 
     var idx = 0;
 
