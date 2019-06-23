@@ -1,4 +1,4 @@
-This fork: Literate Markdown extension
+This fork: Agda extension
 ======================================
 
 Instructions:
