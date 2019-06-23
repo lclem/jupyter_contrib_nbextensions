@@ -46,17 +46,12 @@ define([
     var Kernel = kernel.Kernel;
     var Cell = cell.Cell;
     var CodeCell = codecell.CodeCell;
-    var TextCell = textcell.TextCell;
     var Notebook = notebook.Notebook;
 
     var original_MarkdownCell = textcell.MarkdownCell;
     var original_prototype = original_MarkdownCell.prototype;
     var original_render = original_prototype.render;
-    var original_create_element = original_prototype.create_element;
-    var original_fromJSON = original_prototype.fromJSON;
     var original_toJSON = original_prototype.toJSON;
-
-    //var original_execute_cell_and_select_below = Notebook.prototype.execute_cell_and_select_below;
 
     var old_CodeCell_create_element = CodeCell.prototype.create_element;
     CodeCell.prototype.create_element = function() {

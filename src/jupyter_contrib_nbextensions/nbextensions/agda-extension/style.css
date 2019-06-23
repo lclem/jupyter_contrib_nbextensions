@@ -343,8 +343,8 @@ div#pager .ui-resizable-handle {
     font-size: inherit;
     height: 22px;
     line-height: 22px;
-    white-space: nowrap;
     padding: 0px 10px;
+    white-space: nowrap
 }
 
 .rendered_html h1:first-child,
