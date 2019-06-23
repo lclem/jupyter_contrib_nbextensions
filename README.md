@@ -4,7 +4,11 @@ This fork: Agda extension
 Instructions:
 
 ```
-pip install -e jupyter_contrib_nbextensions && jupyter contrib nbextension install --user
+pip install -e jupyter_contrib_nbextensions
+jupyter contrib nbextension install --user
+jupyter nbextension enable --py widgetsnbextension
+jupyter nbextension enable agda-extension/main
+jupyter nbextension enable toc2/main
 ```
 
 Jupyter notebook extensions
