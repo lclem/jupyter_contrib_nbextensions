@@ -1,6 +1,8 @@
 This fork: Agda extension
 ======================================
 
+![](https://github.com/lclem/agda-kernel/demo/demo2.gif)
+
 Instructions:
 
 ```
