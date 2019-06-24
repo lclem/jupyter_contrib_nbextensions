@@ -1,7 +1,12 @@
 This fork: Agda extension
 ======================================
 
-![](https://github.com/lclem/agda-kernel/demo/demo2.gif)
+![](https://github.com/lclem/agda-kernel/blob/master/demo/demo2.gif)
+
+Features:
+
+- Literate markdown cells mixing markdown and executable Agda code.
+- Better integration between the Jupyter notebook and the underlying [Agda kernel](https://github.com/lclem/agda-kernel).
 
 Instructions:
 
